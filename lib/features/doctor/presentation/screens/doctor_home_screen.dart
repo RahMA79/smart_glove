@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:smart_glove/core/theme/app_colors.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/create_program_screen.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/program_config_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/doctor_profile_header.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/drawer_menu.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/program_card.dart';
@@ -41,14 +43,14 @@ class DoctorHomeScreen extends StatelessWidget {
               title: 'Stroke Recovery',
               patientsCount: 20,
               onTap: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (_) => const ProgramConfigScreen(
-                //       programName: 'Stroke Recovery',
-                //     ),
-                //   ),
-                // );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ProgramConfigScreen(
+                      programName: 'Stroke Recovery',
+                    ),
+                  ),
+                );
               },
             ),
             SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -56,14 +58,14 @@ class DoctorHomeScreen extends StatelessWidget {
               title: 'Therapy for Children',
               patientsCount: 15,
               onTap: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (_) => const ProgramConfigScreen(
-                //       programName: 'Stroke Recovery',
-                //     ),
-                //   ),
-                // );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ProgramConfigScreen(
+                      programName: 'Stroke Recovery',
+                    ),
+                  ),
+                );
               },
             ),
 
@@ -72,10 +74,12 @@ class DoctorHomeScreen extends StatelessWidget {
             PrimaryButton(
               text: 'Create New Program',
               onPressed: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (_) => const CreateProgramScreen()),
-                // );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CreateProgramScreen(),
+                  ),
+                );
               },
             ),
           ],
