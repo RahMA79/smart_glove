@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:smart_glove/core/theme/app_colors.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/create_program_screen.dart';
@@ -14,14 +13,15 @@ class DoctorHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
       drawer: const DoctorDrawer(),
       appBar: AppBar(title: const Text('Home')),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
-          horizontal: SizeConfig.blockWidth * 4, // 4% from width
-          vertical: SizeConfig.blockHeight * 2, // 2% from height
+          horizontal: SizeConfig.blockWidth * 4,
+          vertical: SizeConfig.blockHeight * 2,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -29,14 +29,14 @@ class DoctorHomeScreen extends StatelessWidget {
             const DoctorProfileHeader(),
             SizedBox(height: SizeConfig.blockHeight * 3),
 
-            const Text(
+            Text(
               'Therapy Programs',
-              style: TextStyle(
+              style: textTheme.titleMedium?.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textMain,
               ),
             ),
+
             SizedBox(height: SizeConfig.blockHeight * 2),
 
             ProgramCard(
@@ -53,7 +53,9 @@ class DoctorHomeScreen extends StatelessWidget {
                 );
               },
             ),
+
             SizedBox(height: SizeConfig.blockHeight * 1.5),
+
             ProgramCard(
               title: 'Therapy for Children',
               patientsCount: 15,
@@ -62,7 +64,7 @@ class DoctorHomeScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) => const ProgramConfigScreen(
-                      programName: 'Stroke Recovery',
+                      programName: 'Therapy for Children',
                     ),
                   ),
                 );

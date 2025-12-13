@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:smart_glove/core/theme/app_colors.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 
 class DoctorProfileHeader extends StatelessWidget {
@@ -7,6 +6,8 @@ class DoctorProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Row(
       children: [
         CircleAvatar(
@@ -16,19 +17,18 @@ class DoctorProfileHeader extends StatelessWidget {
         SizedBox(width: SizeConfig.blockWidth * 4),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
               'Dr. Sarah Ahmed',
-              style: TextStyle(
+              style: textTheme.titleMedium?.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textMain,
               ),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
               'Hand Rehabilitation Specialist',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: textTheme.bodySmall?.copyWith(fontSize: 13),
             ),
           ],
         ),

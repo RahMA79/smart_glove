@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/size_config.dart';
-import '../../../../core/widgets/app_text_field.dart';
-import '../../../../core/widgets/primary_button.dart';
+import 'package:smart_glove/core/utils/size_config.dart';
+import 'package:smart_glove/core/widgets/app_text_field.dart';
+import 'package:smart_glove/core/widgets/primary_button.dart';
 import '../widgets/labeled_slider.dart';
 
 class CreateProgramScreen extends StatefulWidget {
@@ -17,7 +16,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
   String? _selectedInjuryType = 'Stroke';
 
   double _sessionDuration = 30; // minutes
-  double _fingerAngle = 60; // genral angle
+  double _fingerAngle = 60; // general angle
   double _motorAssist = 50; // %
   double _emgThreshold = 30; // %
 
@@ -30,13 +29,15 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Create Program')),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
-          horizontal: SizeConfig.blockWidth * 4, // 4% from width
-          vertical: SizeConfig.blockHeight * 2, // 2% from height
+          horizontal: SizeConfig.blockWidth * 4,
+          vertical: SizeConfig.blockHeight * 2,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,17 +51,17 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             SizedBox(height: SizeConfig.blockHeight * 2),
 
             // Injury Type
-            const Text(
+            Text(
               'Type of Injury',
-              style: TextStyle(
+              style: textTheme.titleMedium?.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textMain,
               ),
             ),
             const SizedBox(height: 8),
+
             DropdownButtonFormField<String>(
-              initialValue: _selectedInjuryType,
+              value: _selectedInjuryType,
               items: const [
                 DropdownMenuItem(value: 'Stroke', child: Text('Stroke')),
                 DropdownMenuItem(
@@ -80,7 +81,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
               },
               decoration: InputDecoration(
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: theme.cardColor, // بدل Colors.white
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -90,16 +91,17 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
                   vertical: 12,
                 ),
               ),
+              dropdownColor: theme.cardColor,
+              style: textTheme.bodyMedium,
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 3),
 
-            const Text(
+            Text(
               'Session Settings',
-              style: TextStyle(
+              style: textTheme.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textMain,
               ),
             ),
             SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -121,12 +123,11 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
 
             SizedBox(height: SizeConfig.blockHeight * 2),
 
-            const Text(
+            Text(
               'Finger Angles & Assistance',
-              style: TextStyle(
+              style: textTheme.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textMain,
               ),
             ),
             SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -165,12 +166,11 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
 
             SizedBox(height: SizeConfig.blockHeight * 3),
 
-            const Text(
+            Text(
               'EMG Threshold',
-              style: TextStyle(
+              style: textTheme.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textMain,
               ),
             ),
             SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -200,7 +200,6 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
   }
 
   void _onCreatePressed() {
-    // for now, just print the values and check they are correct
     debugPrint('Program Name: ${_programNameController.text}');
     debugPrint('Injury Type: $_selectedInjuryType');
     debugPrint('Duration: $_sessionDuration');

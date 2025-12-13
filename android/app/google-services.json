@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "312821844850",
+    "project_id": "smart-gloves-4e9ae",
+    "storage_bucket": "smart-gloves-4e9ae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:312821844850:android:bd9e636281cf51cb376beb",
+        "android_client_info": {
+          "package_name": "com.example.smart_glove"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdCi5251ZkLYAIUdMdKubSsigK-dBkhXE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

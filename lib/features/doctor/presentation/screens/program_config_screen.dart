@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/size_config.dart';
-import '../../../../core/widgets/primary_button.dart';
+import 'package:smart_glove/core/utils/size_config.dart';
+import 'package:smart_glove/core/widgets/primary_button.dart';
 import '../../presentation/widgets/labeled_slider.dart';
 import '../../../../core/widgets/app_text_field.dart';
 
@@ -15,8 +14,8 @@ class ProgramConfigScreen extends StatefulWidget {
 }
 
 class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
-  // Session settings
-  double _sessionDuration = 30; // minutes
+  double _sessionDuration = 30;
+
   final TextEditingController _setsController = TextEditingController(
     text: '3',
   );
@@ -24,16 +23,13 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
     text: '10',
   );
 
-  // Angles
   double _thumbFlex = 45;
   double _indexFlex = 60;
   double _middleFlex = 60;
 
-  // Motor assistance
   double _assistMin = 20;
   double _assistMax = 80;
 
-  // EMG thresholds
   double _flexorThreshold = 30;
   double _extensorThreshold = 25;
 
@@ -47,6 +43,8 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
+    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.programName)),
@@ -59,12 +57,11 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Section: Session basics
-            const Text(
+            Text(
               'Session Basics',
-              style: TextStyle(
+              style: textTheme.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textMain,
               ),
             ),
             SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -76,9 +73,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
               max: 60,
               divisions: 5,
               unit: 'min',
-              onChanged: (v) {
-                setState(() => _sessionDuration = v);
-              },
+              onChanged: (v) => setState(() => _sessionDuration = v),
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -108,12 +103,11 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
             SizedBox(height: SizeConfig.blockHeight * 3),
 
             // Section: Finger angles
-            const Text(
+            Text(
               'Target Finger Angles',
-              style: TextStyle(
+              style: textTheme.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textMain,
               ),
             ),
             SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -125,9 +119,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
               max: 90,
               divisions: 9,
               unit: '°',
-              onChanged: (v) {
-                setState(() => _thumbFlex = v);
-              },
+              onChanged: (v) => setState(() => _thumbFlex = v),
             ),
             LabeledSlider(
               title: 'Index Flexion',
@@ -136,9 +128,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
               max: 90,
               divisions: 9,
               unit: '°',
-              onChanged: (v) {
-                setState(() => _indexFlex = v);
-              },
+              onChanged: (v) => setState(() => _indexFlex = v),
             ),
             LabeledSlider(
               title: 'Middle Flexion',
@@ -147,20 +137,17 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
               max: 90,
               divisions: 9,
               unit: '°',
-              onChanged: (v) {
-                setState(() => _middleFlex = v);
-              },
+              onChanged: (v) => setState(() => _middleFlex = v),
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 3),
 
             // Section: Motor assistance
-            const Text(
+            Text(
               'Motor Assistance',
-              style: TextStyle(
+              style: textTheme.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textMain,
               ),
             ),
             SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -172,9 +159,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
               max: 100,
               divisions: 10,
               unit: '%',
-              onChanged: (v) {
-                setState(() => _assistMin = v);
-              },
+              onChanged: (v) => setState(() => _assistMin = v),
             ),
             LabeledSlider(
               title: 'Max Assistance',
@@ -183,20 +168,17 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
               max: 100,
               divisions: 10,
               unit: '%',
-              onChanged: (v) {
-                setState(() => _assistMax = v);
-              },
+              onChanged: (v) => setState(() => _assistMax = v),
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 3),
 
             // Section: EMG thresholds
-            const Text(
+            Text(
               'EMG Thresholds',
-              style: TextStyle(
+              style: textTheme.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textMain,
               ),
             ),
             SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -208,9 +190,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
               max: 100,
               divisions: 10,
               unit: '%MVC',
-              onChanged: (v) {
-                setState(() => _flexorThreshold = v);
-              },
+              onChanged: (v) => setState(() => _flexorThreshold = v),
             ),
             LabeledSlider(
               title: 'Extensor Activation',
@@ -219,9 +199,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
               max: 100,
               divisions: 10,
               unit: '%MVC',
-              onChanged: (v) {
-                setState(() => _extensorThreshold = v);
-              },
+              onChanged: (v) => setState(() => _extensorThreshold = v),
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 4),
@@ -234,25 +212,15 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
   }
 
   void _onSavePressed() {
-    // just print the settings to console
-    debugPrint('Program: ${widget.programName}');
-    debugPrint('Duration: $_sessionDuration');
-    debugPrint('Sets: ${_setsController.text}');
-    debugPrint('Reps: ${_repsController.text}');
-    debugPrint('Thumb: $_thumbFlex');
-    debugPrint('Index: $_indexFlex');
-    debugPrint('Middle: $_middleFlex');
-    debugPrint('Assist Min: $_assistMin');
-    debugPrint('Assist Max: $_assistMax');
-    debugPrint('Flexor EMG: $_flexorThreshold');
-    debugPrint('Extensor EMG: $_extensorThreshold');
+    final theme = Theme.of(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: AppColors.primaryBlue,
-        content: Text('Program settings saved'),
+      SnackBar(
+        backgroundColor: theme.colorScheme.primary,
+        content: const Text('Program settings saved'),
       ),
     );
+
     Navigator.pop(context);
   }
 }

@@ -1,50 +1,74 @@
 import 'package:flutter/material.dart';
-import 'package:smart_glove/core/theme/app_colors.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/settings_screen.dart';
 
 class DoctorDrawer extends StatelessWidget {
   const DoctorDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Drawer(
+      backgroundColor: theme.scaffoldBackgroundColor,
       child: Column(
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(color: AppColors.background),
+            decoration: BoxDecoration(color: theme.scaffoldBackgroundColor),
             child: Row(
-              children: const [
-                CircleAvatar(
+              children: [
+                const CircleAvatar(
                   radius: 30,
                   backgroundImage: AssetImage('assets/images/doc.jpg'),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Text(
                   'Dr. Sarah Ahmed',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
           ),
-          _drawerItem(Icons.home, 'Home', () {
+
+          _drawerItem(context, Icons.home, 'Home', () {
             Navigator.pop(context);
           }),
-          _drawerItem(Icons.people, 'My Patients', () {
-            // TO DO: navigation
+
+          _drawerItem(context, Icons.people, 'My Patients', () {}),
+
+          _drawerItem(context, Icons.person_add, 'New Patient Requests', () {}),
+
+          _drawerItem(context, Icons.notifications, 'Notifications', () {}),
+
+          _drawerItem(context, Icons.settings, 'Settings', () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
           }),
-          _drawerItem(Icons.person_add, 'New Patient Requests', () {}),
-          _drawerItem(Icons.notifications, 'Notifications', () {}),
-          _drawerItem(Icons.settings, 'Settings', () {}),
+
           const Spacer(),
-          _drawerItem(Icons.logout, 'Logout', () {}),
+
+          _drawerItem(context, Icons.logout, 'Logout', () {}),
         ],
       ),
     );
   }
 
-  Widget _drawerItem(IconData icon, String title, VoidCallback onTap) {
+  Widget _drawerItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+  ) {
+    final theme = Theme.of(context);
+
     return ListTile(
-      leading: Icon(icon, color: AppColors.primaryBlue),
-      title: Text(title),
+      leading: Icon(icon, color: theme.iconTheme.color),
+      title: Text(title, style: theme.textTheme.bodyMedium),
       onTap: onTap,
     );
   }
