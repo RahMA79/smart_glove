@@ -44,7 +44,6 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
   Widget build(BuildContext context) {
     SizeConfig.init(context);
     final textTheme = Theme.of(context).textTheme;
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.programName)),

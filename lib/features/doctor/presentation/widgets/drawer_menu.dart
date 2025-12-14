@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:smart_glove/features/auth/presentation/widgets/logout_function.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/doctor_notifications_screen.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/my_patients_screen.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/new_patient_request_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/settings_screen.dart';
 
 class DoctorDrawer extends StatelessWidget {
@@ -36,11 +40,33 @@ class DoctorDrawer extends StatelessWidget {
             Navigator.pop(context);
           }),
 
-          _drawerItem(context, Icons.people, 'My Patients', () {}),
+          _drawerItem(context, Icons.people, 'My Patients', () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const MyPatientsScreen()),
+            );
+          }),
 
-          _drawerItem(context, Icons.person_add, 'New Patient Requests', () {}),
+          _drawerItem(context, Icons.person_add, 'New Patient Requests', () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const NewPatientRequestScreen(),
+              ),
+            );
+          }),
 
-          _drawerItem(context, Icons.notifications, 'Notifications', () {}),
+          _drawerItem(context, Icons.notifications, 'Notifications', () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const DoctorNotificationsScreen(),
+              ),
+            );
+          }),
 
           _drawerItem(context, Icons.settings, 'Settings', () {
             Navigator.pop(context);
@@ -52,7 +78,9 @@ class DoctorDrawer extends StatelessWidget {
 
           const Spacer(),
 
-          _drawerItem(context, Icons.logout, 'Logout', () {}),
+          _drawerItem(context, Icons.logout, 'Logout', () async {
+            await LogoutFunction.logout(context);
+          }),
         ],
       ),
     );

@@ -4,6 +4,9 @@ import 'package:smart_glove/core/widgets/app_text_field.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
 import '../widgets/labeled_slider.dart';
 
+// ✅ add this
+import 'package:smart_glove/features/doctor/data/models/therapy_program_model.dart';
+
 class CreateProgramScreen extends StatefulWidget {
   const CreateProgramScreen({super.key});
 
@@ -15,10 +18,10 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
   final TextEditingController _programNameController = TextEditingController();
   String? _selectedInjuryType = 'Stroke';
 
-  double _sessionDuration = 30; // minutes
-  double _fingerAngle = 60; // general angle
-  double _motorAssist = 50; // %
-  double _emgThreshold = 30; // %
+  double _sessionDuration = 30;
+  double _fingerAngle = 60;
+  double _motorAssist = 50;
+  double _emgThreshold = 30;
 
   @override
   void dispose() {
@@ -42,7 +45,6 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Program Name
             AppTextField(
               label: 'Program Name',
               hint: 'Enter program name',
@@ -50,7 +52,6 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             ),
             SizedBox(height: SizeConfig.blockHeight * 2),
 
-            // Injury Type
             Text(
               'Type of Injury',
               style: textTheme.titleMedium?.copyWith(
@@ -74,14 +75,10 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
                   child: Text('Nerve Injury'),
                 ),
               ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedInjuryType = value;
-                });
-              },
+              onChanged: (value) => setState(() => _selectedInjuryType = value),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: theme.cardColor, // بدل Colors.white
+                fillColor: theme.cardColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -106,7 +103,6 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             ),
             SizedBox(height: SizeConfig.blockHeight * 1.5),
 
-            // Session Duration
             LabeledSlider(
               title: 'Session Duration',
               value: _sessionDuration,
@@ -114,11 +110,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
               max: 60,
               divisions: 5,
               unit: 'min',
-              onChanged: (v) {
-                setState(() {
-                  _sessionDuration = v;
-                });
-              },
+              onChanged: (v) => setState(() => _sessionDuration = v),
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 2),
@@ -132,7 +124,6 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             ),
             SizedBox(height: SizeConfig.blockHeight * 1.5),
 
-            // Finger angles
             LabeledSlider(
               title: 'Target Finger Flexion',
               value: _fingerAngle,
@@ -140,16 +131,11 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
               max: 90,
               divisions: 9,
               unit: '°',
-              onChanged: (v) {
-                setState(() {
-                  _fingerAngle = v;
-                });
-              },
+              onChanged: (v) => setState(() => _fingerAngle = v),
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 1.5),
 
-            // Motor assistance
             LabeledSlider(
               title: 'Motor Assistance Level',
               value: _motorAssist,
@@ -157,11 +143,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
               max: 100,
               divisions: 10,
               unit: '%',
-              onChanged: (v) {
-                setState(() {
-                  _motorAssist = v;
-                });
-              },
+              onChanged: (v) => setState(() => _motorAssist = v),
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 3),
@@ -175,7 +157,6 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             ),
             SizedBox(height: SizeConfig.blockHeight * 1.5),
 
-            // EMG threshold
             LabeledSlider(
               title: 'EMG Activation Threshold',
               value: _emgThreshold,
@@ -183,11 +164,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
               max: 100,
               divisions: 10,
               unit: '%MVC',
-              onChanged: (v) {
-                setState(() {
-                  _emgThreshold = v;
-                });
-              },
+              onChanged: (v) => setState(() => _emgThreshold = v),
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 4),
@@ -200,11 +177,25 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
   }
 
   void _onCreatePressed() {
-    debugPrint('Program Name: ${_programNameController.text}');
-    debugPrint('Injury Type: $_selectedInjuryType');
-    debugPrint('Duration: $_sessionDuration');
-    debugPrint('Finger Angle: $_fingerAngle');
-    debugPrint('Motor Assist: $_motorAssist');
-    debugPrint('EMG Threshold: $_emgThreshold');
+    final name = _programNameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter program name")),
+      );
+      return;
+    }
+
+    final created = TherapyProgramModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(), // مؤقت لحد API
+      name: name,
+      injuryType: _selectedInjuryType ?? "Stroke",
+      sessionDuration: _sessionDuration,
+      fingerAngle: _fingerAngle,
+      motorAssist: _motorAssist,
+      emgThreshold: _emgThreshold,
+    );
+
+    // ✅ رجّعي البرنامج للشاشة اللي فتحت CreateProgramScreen
+    Navigator.pop(context, created);
   }
 }
