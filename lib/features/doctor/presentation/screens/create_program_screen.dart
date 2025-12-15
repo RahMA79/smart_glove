@@ -1,10 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/app_text_field.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
 import '../widgets/labeled_slider.dart';
-
-// ✅ add this
 import 'package:smart_glove/features/doctor/data/models/therapy_program_model.dart';
 
 class CreateProgramScreen extends StatefulWidget {
@@ -22,6 +21,11 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
   double _fingerAngle = 60;
   double _motorAssist = 50;
   double _emgThreshold = 30;
+
+  bool _saving = false;
+
+  // مؤقت لحد Auth
+  static const String _doctorId = 'vhDs4fPhUjKvJVqVqJImj7';
 
   @override
   void dispose() {
@@ -75,7 +79,9 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
                   child: Text('Nerve Injury'),
                 ),
               ],
-              onChanged: (value) => setState(() => _selectedInjuryType = value),
+              onChanged: _saving
+                  ? null
+                  : (v) => setState(() => _selectedInjuryType = v),
               decoration: InputDecoration(
                 filled: true,
                 fillColor: theme.cardColor,
@@ -110,7 +116,9 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
               max: 60,
               divisions: 5,
               unit: 'min',
-              onChanged: (v) => setState(() => _sessionDuration = v),
+              onChanged: _saving
+                  ? (_) {}
+                  : (v) => setState(() => _sessionDuration = v),
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 2),
@@ -131,7 +139,9 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
               max: 90,
               divisions: 9,
               unit: '°',
-              onChanged: (v) => setState(() => _fingerAngle = v),
+              onChanged: _saving
+                  ? (_) {}
+                  : (v) => setState(() => _fingerAngle = v),
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -143,7 +153,9 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
               max: 100,
               divisions: 10,
               unit: '%',
-              onChanged: (v) => setState(() => _motorAssist = v),
+              onChanged: _saving
+                  ? (_) {}
+                  : (v) => setState(() => _motorAssist = v),
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 3),
@@ -164,19 +176,26 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
               max: 100,
               divisions: 10,
               unit: '%MVC',
-              onChanged: (v) => setState(() => _emgThreshold = v),
+              onChanged: _saving
+                  ? (_) {}
+                  : (v) => setState(() => _emgThreshold = v),
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 4),
 
-            PrimaryButton(text: 'Create Program', onPressed: _onCreatePressed),
+            PrimaryButton(
+              text: _saving ? 'Saving...' : 'Create Program',
+              onPressed: () {
+                if (!_saving) _onCreatePressed();
+              },
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _onCreatePressed() {
+  Future<void> _onCreatePressed() async {
     final name = _programNameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -185,17 +204,48 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
       return;
     }
 
-    final created = TherapyProgramModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(), // مؤقت لحد API
-      name: name,
-      injuryType: _selectedInjuryType ?? "Stroke",
-      sessionDuration: _sessionDuration,
-      fingerAngle: _fingerAngle,
-      motorAssist: _motorAssist,
-      emgThreshold: _emgThreshold,
-    );
+    setState(() => _saving = true);
 
-    // ✅ رجّعي البرنامج للشاشة اللي فتحت CreateProgramScreen
-    Navigator.pop(context, created);
+    try {
+      final ref = FirebaseFirestore.instance
+          .collection('doctors')
+          .doc(_doctorId)
+          .collection('programs')
+          .doc();
+
+      final now = FieldValue.serverTimestamp();
+
+      await ref.set({
+        'name': name,
+        'injuryType': _selectedInjuryType ?? 'Stroke',
+        'sessionDurationMin': _sessionDuration,
+        'targetFingerFlexionDeg': _fingerAngle,
+        'motorAssistancePercent': _motorAssist,
+        'emgActivationThresholdPercentMvc': _emgThreshold,
+        'patientsCount': 0, // ✅ جديد
+        'createdAt': now,
+        'updatedAt': now,
+      });
+
+      final created = TherapyProgramModel(
+        id: ref.id,
+        name: name,
+        injuryType: _selectedInjuryType ?? "Stroke",
+        sessionDuration: _sessionDuration,
+        fingerAngle: _fingerAngle,
+        motorAssist: _motorAssist,
+        emgThreshold: _emgThreshold,
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context, created);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to create program: $e")));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 }

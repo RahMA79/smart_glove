@@ -1,14 +1,37 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
+import 'package:smart_glove/features/doctor/data/models/therapy_program_model.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/create_program_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/program_config_screen.dart';
+import 'package:smart_glove/features/doctor/presentation/widgets/doctor_bottom_nav.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/doctor_profile_header.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/drawer_menu.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/program_card.dart';
 
-class DoctorHomeScreen extends StatelessWidget {
+class DoctorHomeScreen extends StatefulWidget {
   const DoctorHomeScreen({super.key});
+
+  @override
+  State<DoctorHomeScreen> createState() => _DoctorHomeScreenState();
+}
+
+class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
+  int _navIndex = 0;
+
+  // مؤقت لحد Auth
+  static const String _doctorId = 'vhDs4fPhUjKvJVqVqJImj7';
+
+  double _toDouble(dynamic v, double fallback) {
+    if (v is num) return v.toDouble();
+    return fallback;
+  }
+
+  int _toInt(dynamic v, int fallback) {
+    if (v is num) return v.toInt();
+    return fallback;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,37 +59,81 @@ class DoctorHomeScreen extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
-
             SizedBox(height: SizeConfig.blockHeight * 2),
 
-            ProgramCard(
-              title: 'Stroke Recovery',
-              patientsCount: 20,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ProgramConfigScreen(
-                      programName: 'Stroke Recovery',
-                    ),
-                  ),
-                );
-              },
-            ),
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('doctors')
+                  .doc(_doctorId)
+                  .collection('programs')
+                  .orderBy('createdAt', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                }
 
-            SizedBox(height: SizeConfig.blockHeight * 1.5),
+                final docs = snapshot.data?.docs ?? [];
+                if (docs.isEmpty) {
+                  return const Text('No programs yet.');
+                }
 
-            ProgramCard(
-              title: 'Therapy for Children',
-              patientsCount: 15,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ProgramConfigScreen(
-                      programName: 'Therapy for Children',
-                    ),
-                  ),
+                return Column(
+                  children: docs.map((d) {
+                    final data = d.data() as Map<String, dynamic>;
+
+                    final program = TherapyProgramModel(
+                      id: d.id,
+                      name: (data['name'] ?? '').toString(),
+                      injuryType: (data['injuryType'] ?? 'Stroke').toString(),
+                      sessionDuration: _toDouble(
+                        data['sessionDurationMin'],
+                        30,
+                      ),
+                      fingerAngle: _toDouble(
+                        data['targetFingerFlexionDeg'],
+                        60,
+                      ),
+                      motorAssist: _toDouble(
+                        data['motorAssistancePercent'],
+                        50,
+                      ),
+                      emgThreshold: _toDouble(
+                        data['emgActivationThresholdPercentMvc'],
+                        30,
+                      ),
+                    );
+
+                    final patientsCount = _toInt(
+                      data['patientsCount'],
+                      0,
+                    ); // ✅ من Firebase
+
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: SizeConfig.blockHeight * 1.5,
+                      ),
+                      child: ProgramCard(
+                        title: program.name,
+                        patientsCount: patientsCount,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ProgramConfigScreen(
+                                doctorId: _doctorId,
+                                programId: program.id,
+                                programName: program.name,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  }).toList(),
                 );
               },
             ),
@@ -75,8 +142,8 @@ class DoctorHomeScreen extends StatelessWidget {
 
             PrimaryButton(
               text: 'Create New Program',
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => const CreateProgramScreen(),
@@ -86,6 +153,10 @@ class DoctorHomeScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: DoctorBottomNav(
+        currentIndex: _navIndex,
+        onChanged: (i) => setState(() => _navIndex = i),
       ),
     );
   }

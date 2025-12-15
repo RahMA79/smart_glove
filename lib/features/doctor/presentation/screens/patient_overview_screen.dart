@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/assign_program_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/patient_progress_screen.dart';
+import 'package:smart_glove/features/doctor/presentation/widgets/doctor_bottom_nav.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/patient_action_card.dart';
 
-class PatientOverviewScreen extends StatelessWidget {
+class PatientOverviewScreen extends StatefulWidget {
   final String patientId;
   final String patientName;
   final String condition;
@@ -16,12 +17,17 @@ class PatientOverviewScreen extends StatelessWidget {
   });
 
   @override
+  State<PatientOverviewScreen> createState() => _PatientOverviewScreenState();
+}
+
+class _PatientOverviewScreenState extends State<PatientOverviewScreen> {
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(title: Text(patientName), centerTitle: true),
+      appBar: AppBar(title: Text(widget.patientName), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
@@ -35,9 +41,9 @@ class PatientOverviewScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) => AssignProgramScreen(
-                      patientId: patientId,
-                      patientName: patientName,
-                      condition: condition,
+                      patientId: widget.patientId,
+                      patientName: widget.patientName,
+                      condition: widget.condition,
                     ),
                   ),
                 );
@@ -53,7 +59,7 @@ class PatientOverviewScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) =>
-                        PatientProgressScreen(patientName: patientName),
+                        PatientProgressScreen(patientName: widget.patientName),
                   ),
                 );
               },

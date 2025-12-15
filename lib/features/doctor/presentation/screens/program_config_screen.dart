@@ -1,225 +1,333 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
 import '../../presentation/widgets/labeled_slider.dart';
-import '../../../../core/widgets/app_text_field.dart';
 
 class ProgramConfigScreen extends StatefulWidget {
+  final String doctorId;
+  final String programId;
   final String programName;
 
-  const ProgramConfigScreen({super.key, required this.programName});
+  const ProgramConfigScreen({
+    super.key,
+    required this.doctorId,
+    required this.programId,
+    required this.programName,
+  });
 
   @override
   State<ProgramConfigScreen> createState() => _ProgramConfigScreenState();
 }
 
 class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
-  double _sessionDuration = 30;
+  bool _loading = true;
+  bool _saving = false;
+  bool _deleting = false;
 
-  final TextEditingController _setsController = TextEditingController(
-    text: '3',
-  );
-  final TextEditingController _repsController = TextEditingController(
-    text: '10',
-  );
-
-  double _thumbFlex = 45;
-  double _indexFlex = 60;
-  double _middleFlex = 60;
-
-  double _assistMin = 20;
-  double _assistMax = 80;
-
-  double _flexorThreshold = 30;
-  double _extensorThreshold = 25;
+  double _sessionDurationMin = 30;
+  double _targetFingerFlexionDeg = 60;
+  double _motorAssistancePercent = 50;
+  double _emgActivationThresholdPercentMvc = 30;
 
   @override
-  void dispose() {
-    _setsController.dispose();
-    _repsController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _loadProgram();
+  }
+
+  double _toDouble(dynamic v, double fallback) {
+    if (v is num) return v.toDouble();
+    return fallback;
+  }
+
+  Future<void> _loadProgram() async {
+    setState(() => _loading = true);
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('doctors')
+          .doc(widget.doctorId)
+          .collection('programs')
+          .doc(widget.programId)
+          .get();
+
+      if (!doc.exists) return;
+
+      final data = doc.data() as Map<String, dynamic>;
+
+      setState(() {
+        _sessionDurationMin = _toDouble(
+          data['sessionDurationMin'],
+          _sessionDurationMin,
+        );
+        _targetFingerFlexionDeg = _toDouble(
+          data['targetFingerFlexionDeg'],
+          _targetFingerFlexionDeg,
+        );
+        _motorAssistancePercent = _toDouble(
+          data['motorAssistancePercent'],
+          _motorAssistancePercent,
+        );
+        _emgActivationThresholdPercentMvc = _toDouble(
+          data['emgActivationThresholdPercentMvc'],
+          _emgActivationThresholdPercentMvc,
+        );
+      });
+    } catch (_) {
+      // عرض القيم الافتراضية
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final cs = theme.colorScheme;
+    final disabled = _saving || _deleting;
+
+    final destructiveColor = cs.error;
+    final iconBaseColor = theme.brightness == Brightness.dark
+        ? cs.onSurface.withOpacity(0.85)
+        : cs.onSurface.withOpacity(0.70);
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.programName)),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(
-          horizontal: SizeConfig.blockWidth * 4,
-          vertical: SizeConfig.blockHeight * 2,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Section: Session basics
-            Text(
-              'Session Basics',
-              style: textTheme.titleMedium?.copyWith(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: SizeConfig.blockHeight * 1.5),
-
-            LabeledSlider(
-              title: 'Session Duration',
-              value: _sessionDuration,
-              min: 10,
-              max: 60,
-              divisions: 5,
-              unit: 'min',
-              onChanged: (v) => setState(() => _sessionDuration = v),
-            ),
-
-            SizedBox(height: SizeConfig.blockHeight * 1.5),
-
-            Row(
-              children: [
-                Expanded(
-                  child: AppTextField(
-                    label: 'Sets',
-                    hint: 'e.g. 3',
-                    controller: _setsController,
-                    keyboardType: TextInputType.number,
+      appBar: AppBar(
+        title: Text(widget.programName),
+        actions: [
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 6),
+            child: Material(
+              color: Colors.transparent,
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                hoverColor: destructiveColor.withOpacity(0.14), // 🟥 hover
+                splashColor: destructiveColor.withOpacity(0.22), // 🟥 press
+                onTap: disabled ? null : _confirmDelete,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Icon(
+                    Icons.delete_forever_rounded, // ✅ مميزة
+                    size: 26, // ✅ أكبر شوية
+                    color: disabled
+                        ? cs.onSurface.withOpacity(0.35)
+                        : iconBaseColor,
                   ),
                 ),
-                SizedBox(width: SizeConfig.blockWidth * 4),
-                Expanded(
-                  child: AppTextField(
-                    label: 'Reps per set',
-                    hint: 'e.g. 10',
-                    controller: _repsController,
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-              ],
-            ),
-
-            SizedBox(height: SizeConfig.blockHeight * 3),
-
-            // Section: Finger angles
-            Text(
-              'Target Finger Angles',
-              style: textTheme.titleMedium?.copyWith(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
               ),
             ),
-            SizedBox(height: SizeConfig.blockHeight * 1.5),
-
-            LabeledSlider(
-              title: 'Thumb Flexion',
-              value: _thumbFlex,
-              min: 0,
-              max: 90,
-              divisions: 9,
-              unit: '°',
-              onChanged: (v) => setState(() => _thumbFlex = v),
-            ),
-            LabeledSlider(
-              title: 'Index Flexion',
-              value: _indexFlex,
-              min: 0,
-              max: 90,
-              divisions: 9,
-              unit: '°',
-              onChanged: (v) => setState(() => _indexFlex = v),
-            ),
-            LabeledSlider(
-              title: 'Middle Flexion',
-              value: _middleFlex,
-              min: 0,
-              max: 90,
-              divisions: 9,
-              unit: '°',
-              onChanged: (v) => setState(() => _middleFlex = v),
-            ),
-
-            SizedBox(height: SizeConfig.blockHeight * 3),
-
-            // Section: Motor assistance
-            Text(
-              'Motor Assistance',
-              style: textTheme.titleMedium?.copyWith(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: SizeConfig.blockHeight * 1.5),
-
-            LabeledSlider(
-              title: 'Min Assistance',
-              value: _assistMin,
-              min: 0,
-              max: 100,
-              divisions: 10,
-              unit: '%',
-              onChanged: (v) => setState(() => _assistMin = v),
-            ),
-            LabeledSlider(
-              title: 'Max Assistance',
-              value: _assistMax,
-              min: 0,
-              max: 100,
-              divisions: 10,
-              unit: '%',
-              onChanged: (v) => setState(() => _assistMax = v),
-            ),
-
-            SizedBox(height: SizeConfig.blockHeight * 3),
-
-            // Section: EMG thresholds
-            Text(
-              'EMG Thresholds',
-              style: textTheme.titleMedium?.copyWith(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: SizeConfig.blockHeight * 1.5),
-
-            LabeledSlider(
-              title: 'Flexor Activation',
-              value: _flexorThreshold,
-              min: 0,
-              max: 100,
-              divisions: 10,
-              unit: '%MVC',
-              onChanged: (v) => setState(() => _flexorThreshold = v),
-            ),
-            LabeledSlider(
-              title: 'Extensor Activation',
-              value: _extensorThreshold,
-              min: 0,
-              max: 100,
-              divisions: 10,
-              unit: '%MVC',
-              onChanged: (v) => setState(() => _extensorThreshold = v),
-            ),
-
-            SizedBox(height: SizeConfig.blockHeight * 4),
-
-            PrimaryButton(text: 'Save Changes', onPressed: _onSavePressed),
-          ],
-        ),
+          ),
+        ],
       ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: SizeConfig.blockWidth * 4,
+                vertical: SizeConfig.blockHeight * 2,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Session Settings',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface, // ✅ Dark mode safe
+                    ),
+                  ),
+                  SizedBox(height: SizeConfig.blockHeight * 1.5),
+
+                  LabeledSlider(
+                    title: 'Session Duration',
+                    value: _sessionDurationMin,
+                    min: 10,
+                    max: 60,
+                    divisions: 5,
+                    unit: 'min',
+                    onChanged: disabled
+                        ? (_) {}
+                        : (v) => setState(() => _sessionDurationMin = v),
+                  ),
+
+                  SizedBox(height: SizeConfig.blockHeight * 2),
+
+                  Text(
+                    'Finger Angles & Assistance',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface, // ✅ Dark mode safe
+                    ),
+                  ),
+                  SizedBox(height: SizeConfig.blockHeight * 1.5),
+
+                  LabeledSlider(
+                    title: 'Target Finger Flexion',
+                    value: _targetFingerFlexionDeg,
+                    min: 0,
+                    max: 90,
+                    divisions: 9,
+                    unit: '°',
+                    onChanged: disabled
+                        ? (_) {}
+                        : (v) => setState(() => _targetFingerFlexionDeg = v),
+                  ),
+
+                  SizedBox(height: SizeConfig.blockHeight * 1.5),
+
+                  LabeledSlider(
+                    title: 'Motor Assistance Level',
+                    value: _motorAssistancePercent,
+                    min: 0,
+                    max: 100,
+                    divisions: 10,
+                    unit: '%',
+                    onChanged: disabled
+                        ? (_) {}
+                        : (v) => setState(() => _motorAssistancePercent = v),
+                  ),
+
+                  SizedBox(height: SizeConfig.blockHeight * 3),
+
+                  Text(
+                    'EMG Threshold',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface, // ✅ Dark mode safe
+                    ),
+                  ),
+                  SizedBox(height: SizeConfig.blockHeight * 1.5),
+
+                  LabeledSlider(
+                    title: 'EMG Activation Threshold',
+                    value: _emgActivationThresholdPercentMvc,
+                    min: 0,
+                    max: 100,
+                    divisions: 10,
+                    unit: '%MVC',
+                    onChanged: disabled
+                        ? (_) {}
+                        : (v) => setState(
+                            () => _emgActivationThresholdPercentMvc = v,
+                          ),
+                  ),
+
+                  SizedBox(height: SizeConfig.blockHeight * 4),
+
+                  PrimaryButton(
+                    text: _saving ? 'Saving...' : 'Save Changes',
+                    onPressed: () {
+                      if (disabled) return;
+                      _onSavePressed();
+                    },
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
-  void _onSavePressed() {
-    final theme = Theme.of(context);
+  Future<void> _onSavePressed() async {
+    setState(() => _saving = true);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: theme.colorScheme.primary,
-        content: const Text('Program settings saved'),
+    try {
+      await FirebaseFirestore.instance
+          .collection('doctors')
+          .doc(widget.doctorId)
+          .collection('programs')
+          .doc(widget.programId)
+          .update({
+            'sessionDurationMin': _sessionDurationMin,
+            'targetFingerFlexionDeg': _targetFingerFlexionDeg,
+            'motorAssistancePercent': _motorAssistancePercent,
+            'emgActivationThresholdPercentMvc':
+                _emgActivationThresholdPercentMvc,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Program settings saved')));
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: cs.surface, // ✅ Dark mode safe
+        title: Text(
+          'Delete Program',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: cs.onSurface, // ✅
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to permanently delete this program?\nThis action cannot be undone.',
+          style: TextStyle(color: cs.onSurface.withOpacity(0.85)), // ✅
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: TextStyle(color: cs.primary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: cs.error),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
 
-    Navigator.pop(context);
+    if (ok == true) {
+      await _deleteProgram();
+    }
+  }
+
+  Future<void> _deleteProgram() async {
+    setState(() => _deleting = true);
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('doctors')
+          .doc(widget.doctorId)
+          .collection('programs')
+          .doc(widget.programId)
+          .delete();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Program deleted')));
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
   }
 }

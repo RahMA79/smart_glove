@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:smart_glove/features/auth/presentation/screens/splash_screen.dart';
 import 'package:smart_glove/features/auth/presentation/widgets/login_function.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/doctor_home_screen.dart';
+
 import 'package:smart_glove/features/patient/patient_report/data/models/patient_report_model.dart';
 import 'package:smart_glove/features/patient/patient_report/presentation/screens/patient_report_screen.dart';
 import 'package:smart_glove/features/patient/presentation/screens/patient_home_screen.dart';
@@ -55,7 +56,7 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.dark(),
       themeMode: themeNotifier.themeMode,
 
-      home: SplashScreen(),
+      home: const DoctorHomeScreen(),
     );
   }
 }

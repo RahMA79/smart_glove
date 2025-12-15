@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
@@ -5,8 +6,6 @@ import 'package:smart_glove/features/doctor/data/models/therapy_program_model.da
 
 import '../widgets/patient_header_card.dart';
 import '../widgets/program_select_card.dart';
-
-// ✅ add this import (مسارك الحالي)
 import 'package:smart_glove/features/doctor/presentation/screens/create_program_screen.dart';
 
 class AssignProgramScreen extends StatefulWidget {
@@ -14,14 +13,11 @@ class AssignProgramScreen extends StatefulWidget {
   final String patientName;
   final String condition;
 
-  final List<TherapyProgramModel>? programs;
-
   const AssignProgramScreen({
     super.key,
     required this.patientId,
     required this.patientName,
     required this.condition,
-    this.programs,
   });
 
   @override
@@ -30,36 +26,21 @@ class AssignProgramScreen extends StatefulWidget {
 
 class _AssignProgramScreenState extends State<AssignProgramScreen> {
   String? _selectedProgramId;
+  bool _assigning = false;
 
-  late final List<TherapyProgramModel> _programs = [
-    ...(widget.programs ??
-        const [
-          TherapyProgramModel(
-            id: "p1",
-            name: "Hand Mobility - Beginner",
-            injuryType: "Stroke",
-            sessionDuration: 30,
-            fingerAngle: 60,
-            motorAssist: 50,
-            emgThreshold: 30,
-          ),
-          TherapyProgramModel(
-            id: "p2",
-            name: "Grip Strength - Intermediate",
-            injuryType: "Tendon Repair",
-            sessionDuration: 45,
-            fingerAngle: 70,
-            motorAssist: 40,
-            emgThreshold: 35,
-          ),
-        ]),
-  ];
+  // مؤقت لحد Auth
+  static const String _doctorId = 'vhDs4fPhUjKvJVqVqJImj7';
+
+  double _toDouble(dynamic v, double fallback) {
+    if (v is num) return v.toDouble();
+    return fallback;
+  }
 
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
     final theme = Theme.of(context);
-    final canAssign = _selectedProgramId != null;
+    final canAssign = _selectedProgramId != null && !_assigning;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -76,7 +57,6 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
               condition: widget.condition,
             ),
             SizedBox(height: SizeConfig.blockHeight * 2),
-
             Row(
               children: [
                 Expanded(
@@ -89,7 +69,7 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
                   ),
                 ),
                 TextButton(
-                  onPressed: _openCreateProgram,
+                  onPressed: _assigning ? null : _openCreateProgram,
                   child: Text(
                     "Create New",
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -100,20 +80,78 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
                 ),
               ],
             ),
-
             SizedBox(height: SizeConfig.blockHeight * 1.2),
 
             Expanded(
-              child: ListView.separated(
-                itemCount: _programs.length,
-                separatorBuilder: (_, __) =>
-                    SizedBox(height: SizeConfig.blockHeight * 1.6),
-                itemBuilder: (context, i) {
-                  final p = _programs[i];
-                  return ProgramSelectCard(
-                    program: p,
-                    selected: _selectedProgramId == p.id,
-                    onTap: () => setState(() => _selectedProgramId = p.id),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('doctors')
+                    .doc(_doctorId)
+                    .collection('programs')
+                    .orderBy('createdAt', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text("Error: ${snapshot.error}"));
+                  }
+
+                  final docs = snapshot.data?.docs ?? [];
+                  if (docs.isEmpty) {
+                    return const Center(child: Text("No programs yet."));
+                  }
+
+                  final programs = docs.map((d) {
+                    final data = d.data() as Map<String, dynamic>;
+                    return TherapyProgramModel(
+                      id: d.id,
+                      name: (data['name'] ?? '').toString(),
+                      injuryType: (data['injuryType'] ?? 'Stroke').toString(),
+                      sessionDuration: _toDouble(
+                        data['sessionDurationMin'],
+                        30,
+                      ),
+                      fingerAngle: _toDouble(
+                        data['targetFingerFlexionDeg'],
+                        60,
+                      ),
+                      motorAssist: _toDouble(
+                        data['motorAssistancePercent'],
+                        50,
+                      ),
+                      emgThreshold: _toDouble(
+                        data['emgActivationThresholdPercentMvc'],
+                        30,
+                      ),
+                    );
+                  }).toList();
+
+                  // ✅ لو البرنامج المختار اتحذف من Firebase، امسح الاختيار
+                  final stillExists = programs.any(
+                    (p) => p.id == _selectedProgramId,
+                  );
+                  if (_selectedProgramId != null && !stillExists) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) setState(() => _selectedProgramId = null);
+                    });
+                  }
+
+                  return ListView.separated(
+                    itemCount: programs.length,
+                    separatorBuilder: (_, __) =>
+                        SizedBox(height: SizeConfig.blockHeight * 1.6),
+                    itemBuilder: (context, i) {
+                      final p = programs[i];
+                      return ProgramSelectCard(
+                        program: p,
+                        selected: _selectedProgramId == p.id,
+                        onTap: () {
+                          setState(() => _selectedProgramId = p.id);
+                        },
+                      );
+                    },
                   );
                 },
               ),
@@ -122,11 +160,9 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
             SizedBox(height: SizeConfig.blockHeight * 2),
 
             PrimaryButton(
-              text: "Assign Program",
+              text: _assigning ? "Assigning..." : "Assign Program",
               onPressed: () {
-                if (canAssign) {
-                  _onAssignPressed();
-                }
+                if (canAssign) _onAssignPressed();
               },
             ),
           ],
@@ -143,27 +179,98 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
 
     if (created == null) return;
 
-    setState(() {
-      _programs.insert(0, created);
-      _selectedProgramId = created.id;
-    });
+    setState(() => _selectedProgramId = created.id);
 
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Program created and selected")),
     );
   }
 
-  void _onAssignPressed() {
+  Future<void> _onAssignPressed() async {
     final programId = _selectedProgramId!;
-    debugPrint(
-      "Assign Program => patientId=${widget.patientId}, programId=$programId",
-    );
+    final db = FirebaseFirestore.instance;
 
-    // TODO: API call assign here
+    final patientRef = db
+        .collection('doctors')
+        .doc(_doctorId)
+        .collection('patients')
+        .doc(widget.patientId);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Program assigned successfully")),
-    );
-    Navigator.pop(context);
+    final newProgramRef = db
+        .collection('doctors')
+        .doc(_doctorId)
+        .collection('programs')
+        .doc(programId);
+
+    setState(() => _assigning = true);
+
+    try {
+      await db.runTransaction((tx) async {
+        // ✅ تأكد إن البرنامج الجديد موجود (عشان update مايفشلش)
+        final newProgSnap = await tx.get(newProgramRef);
+        if (!newProgSnap.exists) {
+          throw Exception(
+            "Selected program not found. Please refresh and select an existing program.",
+          );
+        }
+
+        // اقرأ المريض لمعرفة البرنامج القديم
+        final patientSnap = await tx.get(patientRef);
+
+        String? oldProgramId;
+        if (patientSnap.exists) {
+          final pdata = patientSnap.data() as Map<String, dynamic>;
+          oldProgramId = pdata['assignedProgramId']?.toString();
+        }
+
+        // لو نفس البرنامج -> لا شيء
+        if (oldProgramId == programId) return;
+
+        // ✅ نقص القديم لو موجود (بـ set merge بدل update)
+        if (oldProgramId != null && oldProgramId.isNotEmpty) {
+          final oldProgramRef = db
+              .collection('doctors')
+              .doc(_doctorId)
+              .collection('programs')
+              .doc(oldProgramId);
+
+          final oldSnap = await tx.get(oldProgramRef);
+          if (oldSnap.exists) {
+            tx.set(oldProgramRef, {
+              'patientsCount': FieldValue.increment(-1),
+              'updatedAt': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
+          }
+        }
+
+        // حدّث/أنشئ بيانات المريض
+        tx.set(patientRef, {
+          'name': widget.patientName,
+          'condition': widget.condition,
+          'assignedProgramId': programId,
+          'assignedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+
+        // ✅ زوّد الجديد (بـ set merge بدل update)
+        tx.set(newProgramRef, {
+          'patientsCount': FieldValue.increment(1),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Program assigned successfully")),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to assign: $e")));
+    } finally {
+      if (mounted) setState(() => _assigning = false);
+    }
   }
 }

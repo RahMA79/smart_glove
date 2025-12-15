@@ -33,7 +33,7 @@ class DoctorBottomNav extends StatelessWidget {
             label: "Home",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle, size: 34),
+            icon: Icon(Icons.add, size: 34),
             label: "Add",
           ),
           BottomNavigationBarItem(

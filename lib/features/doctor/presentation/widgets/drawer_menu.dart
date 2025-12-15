@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_glove/features/auth/presentation/widgets/logout_function.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/doctor_home_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/doctor_notifications_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/my_patients_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/new_patient_request_screen.dart';
@@ -38,6 +39,10 @@ class DoctorDrawer extends StatelessWidget {
 
           _drawerItem(context, Icons.home, 'Home', () {
             Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DoctorHomeScreen()),
+            );
           }),
 
           _drawerItem(context, Icons.people, 'My Patients', () {

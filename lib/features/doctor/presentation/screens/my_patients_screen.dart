@@ -1,7 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:smart_glove/features/doctor/presentation/screens/assign_program_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/patient_overview_screen.dart';
-
+import 'package:smart_glove/features/doctor/presentation/widgets/drawer_menu.dart';
 import '../../data/models/doctor_patient_model.dart';
 import '../widgets/doctor_bottom_nav.dart';
 import '../widgets/patient_list_card.dart';
@@ -16,20 +16,8 @@ class MyPatientsScreen extends StatefulWidget {
 class _MyPatientsScreenState extends State<MyPatientsScreen> {
   int _navIndex = 0;
 
-  // TODO: replace with API data
-  final List<DoctorPatientModel> _patients = const [
-    DoctorPatientModel(name: "John Doe", condition: "Stroke", sessionsCount: 4),
-    DoctorPatientModel(
-      name: "Emily Wilson",
-      condition: "Burn Injury",
-      sessionsCount: 8,
-    ),
-    DoctorPatientModel(
-      name: "Mark Smith",
-      condition: "New Injury",
-      sessionsCount: 7,
-    ),
-  ];
+  // مؤقت لحد FirebaseAuth
+  static const String _doctorId = 'vhDs4fPhUjKvJVqVqJImj7';
 
   @override
   Widget build(BuildContext context) {
@@ -37,54 +25,77 @@ class _MyPatientsScreenState extends State<MyPatientsScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      drawer: const DoctorDrawer(),
       appBar: AppBar(
         title: const Text("My Patients"),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            // TODO: open drawer
-          },
-        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.arrow_forward),
-            onPressed: () => Navigator.pop(context),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context),
+            ),
           ),
         ],
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: _patients.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 14),
-                  itemBuilder: (context, index) {
-                    final patient = _patients[index];
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('doctors')
+                .doc(_doctorId)
+                .collection('patients')
+                .orderBy('createdAt', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text("Error: ${snapshot.error}"));
+              }
 
-                    return PatientListCard(
-                      patient: patient,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PatientOverviewScreen(
-                              patientId: "1",
-                              patientName: patient.name,
-                              condition: patient.condition,
-                            ),
+              final docs = snapshot.data?.docs ?? [];
+              if (docs.isEmpty) {
+                return const Center(child: Text("No patients yet."));
+              }
+
+              final patients = docs.map((d) {
+                final data = d.data() as Map<String, dynamic>;
+                return DoctorPatientModel(
+                  name: (data['name'] ?? '').toString(),
+                  condition: (data['condition'] ?? '').toString(),
+                  sessionsCount: (data['sessionsCount'] ?? 0) as int,
+                );
+              }).toList();
+
+              return ListView.separated(
+                itemCount: patients.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 14),
+                itemBuilder: (context, index) {
+                  final patient = patients[index];
+                  final patientId = docs[index].id;
+
+                  return PatientListCard(
+                    patient: patient,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PatientOverviewScreen(
+                            patientId: patientId,
+                            patientName: patient.name,
+                            condition: patient.condition,
                           ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+            },
           ),
         ),
       ),
