@@ -6,7 +6,6 @@ import 'package:smart_glove/core/widgets/primary_button.dart';
 import 'package:smart_glove/features/doctor/data/models/therapy_program_model.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/create_program_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/program_config_screen.dart';
-import 'package:smart_glove/features/doctor/presentation/widgets/doctor_bottom_nav.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/doctor_profile_header.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/drawer_menu.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/program_card.dart';
@@ -19,8 +18,6 @@ class DoctorHomeScreen extends StatefulWidget {
 }
 
 class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
-  int _navIndex = 0;
-
   String? _doctorId;
 
   @override
@@ -160,10 +157,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: DoctorBottomNav(
-        currentIndex: _navIndex,
-        onChanged: (i) => setState(() => _navIndex = i),
       ),
     );
   }

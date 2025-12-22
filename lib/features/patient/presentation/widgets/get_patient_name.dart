@@ -19,7 +19,6 @@ Future<String?> getPatientName(String uid) async {
 
     return name.toString();
   } catch (e) {
-    // اختياري: غيري print بـ logger عندك
     print('getPatientName error: $e');
     return null;
   }

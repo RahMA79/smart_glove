@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
 import 'package:smart_glove/features/doctor/data/models/therapy_program_model.dart';
-
 import '../widgets/patient_header_card.dart';
 import '../widgets/program_select_card.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/create_program_screen.dart';
@@ -28,8 +28,13 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
   String? _selectedProgramId;
   bool _assigning = false;
 
-  // مؤقت لحد Auth
-  static const String _doctorId = 'vhDs4fPhUjKvJVqVqJImj7';
+  String? _doctorId;
+
+  @override
+  void initState() {
+    super.initState();
+    _doctorId = FirebaseAuth.instance.currentUser?.uid;
+  }
 
   double _toDouble(dynamic v, double fallback) {
     if (v is num) return v.toDouble();
@@ -41,6 +46,12 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
     SizeConfig.init(context);
     final theme = Theme.of(context);
     final canAssign = _selectedProgramId != null && !_assigning;
+
+    if (_doctorId == null) {
+      return const Scaffold(
+        body: Center(child: Text("No logged-in doctor. Please login again.")),
+      );
+    }
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -128,7 +139,6 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
                     );
                   }).toList();
 
-                  // ✅ لو البرنامج المختار اتحذف من Firebase، امسح الاختيار
                   final stillExists = programs.any(
                     (p) => p.id == _selectedProgramId,
                   );
@@ -191,15 +201,16 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
     final programId = _selectedProgramId!;
     final db = FirebaseFirestore.instance;
 
+    final doctorId = _doctorId!;
     final patientRef = db
         .collection('doctors')
-        .doc(_doctorId)
+        .doc(doctorId)
         .collection('patients')
         .doc(widget.patientId);
 
     final newProgramRef = db
         .collection('doctors')
-        .doc(_doctorId)
+        .doc(doctorId)
         .collection('programs')
         .doc(programId);
 
@@ -207,7 +218,6 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
 
     try {
       await db.runTransaction((tx) async {
-        // ✅ تأكد إن البرنامج الجديد موجود (عشان update مايفشلش)
         final newProgSnap = await tx.get(newProgramRef);
         if (!newProgSnap.exists) {
           throw Exception(
@@ -215,7 +225,6 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
           );
         }
 
-        // اقرأ المريض لمعرفة البرنامج القديم
         final patientSnap = await tx.get(patientRef);
 
         String? oldProgramId;
@@ -224,14 +233,12 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
           oldProgramId = pdata['assignedProgramId']?.toString();
         }
 
-        // لو نفس البرنامج -> لا شيء
         if (oldProgramId == programId) return;
 
-        // ✅ نقص القديم لو موجود (بـ set merge بدل update)
         if (oldProgramId != null && oldProgramId.isNotEmpty) {
           final oldProgramRef = db
               .collection('doctors')
-              .doc(_doctorId)
+              .doc(doctorId)
               .collection('programs')
               .doc(oldProgramId);
 
@@ -244,7 +251,6 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
           }
         }
 
-        // حدّث/أنشئ بيانات المريض
         tx.set(patientRef, {
           'name': widget.patientName,
           'condition': widget.condition,
@@ -252,7 +258,6 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
           'assignedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
 
-        // ✅ زوّد الجديد (بـ set merge بدل update)
         tx.set(newProgramRef, {
           'patientsCount': FieldValue.increment(1),
           'updatedAt': FieldValue.serverTimestamp(),

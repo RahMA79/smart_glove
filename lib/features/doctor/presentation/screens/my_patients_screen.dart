@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/patient_overview_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/drawer_menu.dart';
 import '../../data/models/doctor_patient_model.dart';
-import '../widgets/doctor_bottom_nav.dart';
 import '../widgets/patient_list_card.dart';
 
 class MyPatientsScreen extends StatefulWidget {
@@ -14,14 +14,28 @@ class MyPatientsScreen extends StatefulWidget {
 }
 
 class _MyPatientsScreenState extends State<MyPatientsScreen> {
-  int _navIndex = 0;
+  String? _doctorId;
 
-  // مؤقت لحد FirebaseAuth
-  static const String _doctorId = 'vhDs4fPhUjKvJVqVqJImj7';
+  @override
+  void initState() {
+    super.initState();
+    _doctorId = FirebaseAuth.instance.currentUser?.uid;
+  }
+
+  int _toInt(dynamic v, int fallback) {
+    if (v is num) return v.toInt();
+    return fallback;
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (_doctorId == null) {
+      return const Scaffold(
+        body: Center(child: Text("No logged-in doctor. Please login again.")),
+      );
+    }
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -67,7 +81,7 @@ class _MyPatientsScreenState extends State<MyPatientsScreen> {
                 return DoctorPatientModel(
                   name: (data['name'] ?? '').toString(),
                   condition: (data['condition'] ?? '').toString(),
-                  sessionsCount: (data['sessionsCount'] ?? 0) as int,
+                  sessionsCount: _toInt(data['sessionsCount'], 0),
                 );
               }).toList();
 
@@ -98,10 +112,6 @@ class _MyPatientsScreenState extends State<MyPatientsScreen> {
             },
           ),
         ),
-      ),
-      bottomNavigationBar: DoctorBottomNav(
-        currentIndex: _navIndex,
-        onChanged: (i) => setState(() => _navIndex = i),
       ),
     );
   }
