@@ -1,5 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_glove/features/auth/presentation/screens/onboarding_screen.dart';
+import 'package:smart_glove/features/auth/presentation/screens/login_screen.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/doctor_home_screen.dart';
+import 'package:smart_glove/features/patient/presentation/screens/patient_home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -45,13 +50,55 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
     _controller.repeat(reverse: true);
 
-    Future.delayed(const Duration(seconds: 4), () {
+    // ✅ بعد وقت السبلاتش: قرري تروحي فين
+    Future.delayed(const Duration(seconds: 4), () async {
       if (!mounted) return;
+      await _routeAfterSplash();
+    });
+  }
+
+  Future<void> _routeAfterSplash() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final seenOnboarding = prefs.getBool("seenOnboarding") ?? false;
+    final isLoggedIn = prefs.getBool("isLoggedIn") ?? false;
+    final role = prefs.getString("role"); // doctor / patient
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (isLoggedIn && user != null && role != null) {
+      if (!mounted) return;
+
+      if (role == "doctor") {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DoctorHomeScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PatientHomeScreen(userId: user.uid),
+          ),
+        );
+      }
+      return;
+    }
+
+    // ✅ مش logged in
+    if (!mounted) return;
+
+    if (!seenOnboarding) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const OnboardingScreen()),
       );
-    });
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    }
   }
 
   @override
@@ -95,7 +142,6 @@ class _SplashScreenState extends State<SplashScreen>
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            //  Glow Effect
                             Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
@@ -112,7 +158,6 @@ class _SplashScreenState extends State<SplashScreen>
                                 ],
                               ),
                             ),
-
                             Image.asset(
                               'assets/images/splash_glove.png',
                               fit: BoxFit.contain,

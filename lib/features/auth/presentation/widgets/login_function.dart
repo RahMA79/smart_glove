@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_glove/features/patient/presentation/screens/patient_home_screen.dart';
-
 import '../../../doctor/presentation/screens/doctor_home_screen.dart';
-// import '../../../patient/presentation/screens/patient_home_screen.dart';
 
 class RoleRoutes {
   static const doctor = "doctor";
@@ -31,17 +30,8 @@ Future<String?> fetchRoleFromFirestore(String uid) async {
 
   final userDoc = await fs.collection("users").doc(uid).get();
   if (userDoc.exists) {
-    final data = userDoc.data();
-    final role = data?["role"]?.toString();
+    final role = userDoc.data()?["role"]?.toString();
     if (role != null && role.isNotEmpty) return role;
-  }
-
-  final doctorDoc = await fs.collection("doctors").doc(uid).get();
-  if (doctorDoc.exists) {
-    final data = doctorDoc.data();
-    final role = data?["role"]?.toString();
-    if (role != null && role.isNotEmpty) return role;
-    return RoleRoutes.doctor;
   }
 
   return null;
@@ -60,6 +50,7 @@ Future<void> ensureUserProfile({
   final role = isDoctorEmail(email) ? RoleRoutes.doctor : RoleRoutes.patient;
 
   await ref.set({
+    "uid": uid,
     "email": email.trim().toLowerCase(),
     "role": role,
     "createdAt": FieldValue.serverTimestamp(),
@@ -96,6 +87,10 @@ Future<void> validate_email_password(
         : RoleRoutes.patient;
 
     await ensureUserProfile(uid: user.uid, email: user.email ?? email);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("isLoggedIn", true);
+    await prefs.setString("role", role);
 
     if (!context.mounted) return;
 

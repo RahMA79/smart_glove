@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -43,7 +45,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   bool get _isLast => _index == _pages.length - 1;
 
-  void _goToLogin() {
+  Future<void> _goToLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool("seenOnboarding", true);
+
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -51,7 +57,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _onNext() {
-    if (_isLast) return _goToLogin();
+    if (_isLast) {
+      _goToLogin();
+      return;
+    }
     _controller.nextPage(
       duration: const Duration(milliseconds: 380),
       curve: Curves.easeOutCubic,

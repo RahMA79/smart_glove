@@ -75,82 +75,152 @@ class _SessionScreenState extends State<SessionScreen> {
   Widget build(BuildContext context) {
     SizeConfig.init(context);
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     final circleSize = (SizeConfig.blockWidth * 55).clamp(180.0, 260.0);
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
-      body: Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: SizeConfig.blockWidth * 6),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Session In Progress",
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+      body: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: (SizeConfig.blockWidth * 6).clamp(16.0, 28.0),
+          vertical: (SizeConfig.blockHeight * 2).clamp(12.0, 22.0),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Session In Progress",
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.2,
               ),
-              SizedBox(height: SizeConfig.blockHeight * 4),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              "Keep going until the timer ends.",
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: cs.onSurface.withOpacity(0.65),
+              ),
+            ),
 
-              SizedBox(
-                height: circleSize,
-                width: circleSize,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      value: _progress,
-                      strokeWidth: 10,
-                      backgroundColor: theme.colorScheme.primary.withOpacity(
-                        0.15,
+            SizedBox(height: SizeConfig.blockHeight * 3),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: theme.dividerColor.withOpacity(isDark ? 0.20 : 0.18),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.12 : 0.06),
+                    blurRadius: 14,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: circleSize,
+                    width: circleSize,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          value: _progress,
+                          strokeWidth: 10,
+                          backgroundColor: cs.primary.withOpacity(0.12),
+                        ),
+                        SizedBox(height: 20),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _formatTime(_remainingSeconds),
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              "Remaining",
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: cs.onSurface.withOpacity(0.60),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // ✅ شريط بسيط للمعلومة
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withOpacity(isDark ? 0.14 : 0.10),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: theme.dividerColor.withOpacity(0.18),
                       ),
                     ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          _formatTime(_remainingSeconds),
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
+                          "Total",
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        SizedBox(height: SizeConfig.blockHeight * 0.8),
                         Text(
-                          "Remaining",
+                          "${widget.durationMinutes} min",
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.textTheme.bodyMedium?.color
-                                ?.withOpacity(0.65),
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: SizeConfig.blockHeight * 5),
-
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _onStopPressed,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.error,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
                   ),
-                  child: const Text(
-                    "Stop",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                ],
+              ),
+            ),
+
+            const Spacer(),
+
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _onStopPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cs.error,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
+                child: const Text(
+                  "Stop",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

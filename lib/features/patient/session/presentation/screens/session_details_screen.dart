@@ -20,68 +20,94 @@ class SessionDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     SizeConfig.init(context);
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final hPad = (SizeConfig.blockWidth * 5).clamp(16.0, 26.0);
+    final vPad = (SizeConfig.blockHeight * 2.5).clamp(14.0, 22.0);
 
     return Scaffold(
-      appBar: AppBar(title: Text(sessionTitle)),
-      body: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: SizeConfig.blockWidth * 5,
-          vertical: SizeConfig.blockHeight * 2.5,
-        ),
+      appBar: AppBar(title: Text(sessionTitle), centerTitle: false),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ✅ Title (basic)
             Text(
               sessionTitle,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w900,
+                letterSpacing: -0.2,
               ),
             ),
 
-            SizedBox(height: SizeConfig.blockHeight * 1.6),
+            SizedBox(height: SizeConfig.blockHeight * 1.4),
 
+            // ✅ Info row (duration) - نفس روح Doctor screens (simple row + chip)
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withOpacity(isDark ? 0.16 : 0.10),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: theme.dividerColor.withOpacity(0.18),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.timer_rounded, size: 18, color: cs.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        "$durationMinutes min",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            SizedBox(height: SizeConfig.blockHeight * 2.0),
+
+            // ✅ Description card (أنضف وأبسط)
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(SizeConfig.blockWidth * 4),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: theme.cardColor,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: theme.dividerColor.withOpacity(isDark ? 0.20 : 0.18),
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(
-                      theme.brightness == Brightness.dark ? 0.12 : 0.06,
-                    ),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withOpacity(isDark ? 0.12 : 0.06),
+                    blurRadius: 14,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
               child: Text(
                 description,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  height: 1.4,
-                  color: theme.textTheme.bodyLarge?.color?.withOpacity(0.85),
+                  height: 1.5,
+                  color: cs.onSurface.withOpacity(0.80),
                 ),
               ),
             ),
 
-            SizedBox(height: SizeConfig.blockHeight * 2.2),
+            SizedBox(height: SizeConfig.blockHeight * 3),
 
-            Row(
-              children: [
-                Icon(Icons.timer, color: theme.colorScheme.primary),
-                SizedBox(width: SizeConfig.blockWidth * 2.5),
-                Text(
-                  "$durationMinutes min",
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-
-            const Spacer(),
-
+            // ✅ Start button ثابت في آخر الصفحة (basic)
             PrimaryButton(
               text: "Start Session",
               onPressed: () {
