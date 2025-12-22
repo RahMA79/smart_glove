@@ -3,14 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_glove/features/auth/presentation/widgets/logout_function.dart';
-import 'package:smart_glove/features/doctor/presentation/screens/doctor_notifications_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/patient_progress_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/settings_screen.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/doctor_notifications_screen.dart';
 
 class PatientDrawer extends StatefulWidget {
   final String patientName;
-
-  /// ✅ نفس uid اللي بتبعيته للـ PatientHomeScreen
   final String userId;
 
   const PatientDrawer({
@@ -45,106 +43,68 @@ class _PatientDrawerState extends State<PatientDrawer> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
 
     return Drawer(
+      backgroundColor: theme.scaffoldBackgroundColor,
       child: Column(
         children: [
-          // ✅ Header ستايل أنضف + نفس صورة الهوم
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 46,
-              bottom: 16,
-            ),
-            decoration: BoxDecoration(
-              color: cs.primary.withOpacity(isDark ? 0.16 : 0.10),
-              border: Border(
-                bottom: BorderSide(color: theme.dividerColor.withOpacity(0.18)),
-              ),
-            ),
+          /// ===== Header (نفس ستايل الدكتور) =====
+          DrawerHeader(
+            decoration: BoxDecoration(color: theme.scaffoldBackgroundColor),
             child: Row(
               children: [
                 CircleAvatar(
-                  radius: 28,
+                  radius: 30,
                   backgroundColor: cs.primary.withOpacity(0.12),
                   backgroundImage: _profileImage != null
                       ? FileImage(_profileImage!)
                       : null,
                   child: _profileImage == null
-                      ? Icon(Icons.person_rounded, color: cs.primary, size: 30)
+                      ? Icon(Icons.person_rounded, size: 30, color: cs.primary)
                       : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.patientName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        "Patient",
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: cs.onSurface.withOpacity(0.65),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    widget.patientName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 6),
+          _drawerItem(context, Icons.home_outlined, 'Home', () {
+            Navigator.pop(context);
+          }),
 
-          _drawerItem(
-            context,
-            icon: Icons.home_outlined,
-            title: "Home",
-            onTap: () => Navigator.pop(context),
-          ),
+          _drawerItem(context, Icons.person_outline, 'Profile', () {
+            Navigator.pop(context);
+          }),
 
-          _drawerItem(
-            context,
-            icon: Icons.person_outline,
-            title: "Profile",
-            onTap: () {
-              Navigator.pop(context);
-              // TODO: Navigator.pushNamed(context, '/profile');
-            },
-          ),
+          _drawerItem(context, Icons.bar_chart_rounded, 'Progress', () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    PatientProgressScreen(patientName: widget.patientName),
+              ),
+            );
+          }),
 
-          _drawerItem(
-            context,
-            icon: Icons.bar_chart_rounded,
-            title: "Progress",
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return PatientProgressScreen(
-                      patientName: widget.patientName,
-                    );
-                  },
-                ),
-              );
-            },
-          ),
-
+          /// ===== Notifications + Badge =====
           ListTile(
-            leading: const Icon(Icons.notifications_outlined, size: 26),
-            title: const Text("Notifications", style: TextStyle(fontSize: 16)),
+            leading: Icon(
+              Icons.notifications_outlined,
+              color: theme.iconTheme.color,
+            ),
+            title: Text('Notifications', style: theme.textTheme.bodyMedium),
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
@@ -152,7 +112,7 @@ class _PatientDrawerState extends State<PatientDrawer> {
                 borderRadius: BorderRadius.circular(999),
               ),
               child: const Text(
-                "1",
+                '1',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 11,
@@ -171,71 +131,39 @@ class _PatientDrawerState extends State<PatientDrawer> {
             },
           ),
 
-          _drawerItem(
-            context,
-            icon: Icons.history,
-            title: "Session History",
-            onTap: () {
-              Navigator.pop(context);
-              // TODO
-            },
-          ),
+          _drawerItem(context, Icons.history, 'Session History', () {
+            Navigator.pop(context);
+          }),
 
-          _drawerItem(
-            context,
-            icon: Icons.settings_outlined,
-            title: "Settings",
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
-            },
-          ),
+          _drawerItem(context, Icons.settings_outlined, 'Settings', () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
+          }),
 
           const Spacer(),
 
-          Divider(height: 1, color: theme.dividerColor.withOpacity(0.20)),
-
-          _drawerItem(
-            context,
-            icon: Icons.logout_rounded,
-            title: "Logout",
-            danger: true,
-            onTap: () async {
-              await LogoutFunction.logout(context);
-            },
-          ),
-
-          const SizedBox(height: 14),
+          _drawerItem(context, Icons.logout_rounded, 'Logout', () async {
+            await LogoutFunction.logout(context);
+          }),
         ],
       ),
     );
   }
 
   Widget _drawerItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    bool danger = false,
-  }) {
+    BuildContext context,
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+  ) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-
-    final color = danger ? cs.error : null;
 
     return ListTile(
-      leading: Icon(icon, size: 26, color: color),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontSize: 16,
-          color: color,
-          fontWeight: danger ? FontWeight.w700 : FontWeight.w500,
-        ),
-      ),
+      leading: Icon(icon, color: theme.iconTheme.color),
+      title: Text(title, style: theme.textTheme.bodyMedium),
       onTap: onTap,
     );
   }

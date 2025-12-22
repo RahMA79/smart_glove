@@ -16,63 +16,75 @@ class PatientProgramCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         padding: EdgeInsets.all(SizeConfig.blockWidth * 4),
         decoration: BoxDecoration(
           color: theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: theme.dividerColor.withOpacity(isDark ? 0.22 : 0.18),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(
-                theme.brightness == Brightness.dark ? 0.12 : 0.06,
-              ),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(isDark ? 0.18 : 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         child: Row(
           children: [
+            // ✅ Icon container أقرب لستايل الدكتور
             Container(
               width: SizeConfig.blockWidth * 12,
               height: SizeConfig.blockWidth * 12,
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(12),
+                color: cs.primary.withOpacity(isDark ? 0.18 : 0.12),
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(Icons.healing, color: theme.colorScheme.primary),
+              child: Icon(Icons.healing_rounded, color: cs.primary, size: 26),
             ),
+
             SizedBox(width: SizeConfig.blockWidth * 3),
+
+            // ✅ Text
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  SizedBox(height: SizeConfig.blockHeight * 0.4),
+                  SizedBox(height: SizeConfig.blockHeight * 0.5),
                   Text(
                     subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withOpacity(
-                        0.65,
-                      ),
+                      color: cs.onSurface.withOpacity(0.65),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
+
+            // ✅ Arrow أنعم
             Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: theme.iconTheme.color?.withOpacity(0.6),
+              Icons.chevron_right_rounded,
+              size: 22,
+              color: cs.onSurface.withOpacity(0.55),
             ),
           ],
         ),

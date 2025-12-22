@@ -84,7 +84,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     value: painRating,
                     onSelect: (v) => setState(() => painRating = v),
                   ),
-                  SizedBox(height: SizeConfig.blockHeight * 2),
+                  SizedBox(height: SizeConfig.blockHeight * 5),
                   Text(
                     "How easy was the session?",
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -99,7 +99,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               ),
             ),
 
-            const Spacer(),
+            SizedBox(height: SizeConfig.blockHeight * 4),
 
             PrimaryButton(
               text: "Submit",
