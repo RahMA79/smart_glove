@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:smart_glove/features/auth/presentation/widgets/logout_function.dart';
 
 class PatientDrawer extends StatelessWidget {
   final String patientName;
@@ -72,7 +73,9 @@ class PatientDrawer extends StatelessWidget {
 
           const Spacer(),
 
-          drawerItem(Icons.logout, "Logout", () {}),
+          drawerItem(Icons.logout, "Logout", () async {
+            await LogoutFunction.logout(context);
+          }),
           const SizedBox(height: 20),
         ],
       ),

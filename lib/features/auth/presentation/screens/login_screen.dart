@@ -63,19 +63,10 @@ class _LoginScreenState extends State<LoginScreen> {
           key: _formKey,
           child: Column(
             children: [
-              SizedBox(height: SizeConfig.blockHeight * 2),
-
-              CircleAvatar(
-                radius: SizeConfig.blockWidth * 14,
-                backgroundColor: Theme.of(context).cardColor,
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    fit: BoxFit.cover,
-                    width: SizeConfig.blockWidth * 26,
-                    height: SizeConfig.blockWidth * 26,
-                  ),
-                ),
+              Image.asset(
+                'assets/images/login.png',
+                fit: BoxFit.cover,
+                height: SizeConfig.blockHeight * 35,
               ),
 
               SizedBox(height: SizeConfig.blockHeight * 4),

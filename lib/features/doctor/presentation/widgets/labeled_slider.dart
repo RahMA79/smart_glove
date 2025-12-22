@@ -52,7 +52,6 @@ class LabeledSlider extends StatelessWidget {
         const SizedBox(height: 6),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
-            // يلتزم بالثيم تلقائيًا (primary) لكن نضمن contrast
             activeTrackColor: cs.primary,
             inactiveTrackColor: cs.onSurface.withOpacity(0.18),
             thumbColor: cs.primary,

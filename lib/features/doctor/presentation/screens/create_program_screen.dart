@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/app_text_field.dart';
@@ -24,8 +25,13 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
 
   bool _saving = false;
 
-  // مؤقت لحد Auth
-  static const String _doctorId = 'vhDs4fPhUjKvJVqVqJImj7';
+  String? _doctorId;
+
+  @override
+  void initState() {
+    super.initState();
+    _doctorId = FirebaseAuth.instance.currentUser?.uid;
+  }
 
   @override
   void dispose() {
@@ -38,6 +44,12 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
     SizeConfig.init(context);
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
+
+    if (_doctorId == null) {
+      return const Scaffold(
+        body: Center(child: Text("No logged-in doctor. Please login again.")),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Create Program')),
@@ -204,6 +216,13 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
       return;
     }
 
+    if (_doctorId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("No logged-in doctor.")));
+      return;
+    }
+
     setState(() => _saving = true);
 
     try {
@@ -222,7 +241,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
         'targetFingerFlexionDeg': _fingerAngle,
         'motorAssistancePercent': _motorAssist,
         'emgActivationThresholdPercentMvc': _emgThreshold,
-        'patientsCount': 0, // ✅ جديد
+        'patientsCount': 0,
         'createdAt': now,
         'updatedAt': now,
       });

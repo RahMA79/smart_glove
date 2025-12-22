@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/assign_program_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/patient_progress_screen.dart';
-import 'package:smart_glove/features/doctor/presentation/widgets/doctor_bottom_nav.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/patient_action_card.dart';
 
 class PatientOverviewScreen extends StatefulWidget {

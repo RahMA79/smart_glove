@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
@@ -20,8 +21,13 @@ class DoctorHomeScreen extends StatefulWidget {
 class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   int _navIndex = 0;
 
-  // مؤقت لحد Auth
-  static const String _doctorId = 'vhDs4fPhUjKvJVqVqJImj7';
+  String? _doctorId;
+
+  @override
+  void initState() {
+    super.initState();
+    _doctorId = FirebaseAuth.instance.currentUser?.uid;
+  }
 
   double _toDouble(dynamic v, double fallback) {
     if (v is num) return v.toDouble();
@@ -38,6 +44,12 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     SizeConfig.init(context);
     final textTheme = Theme.of(context).textTheme;
 
+    if (_doctorId == null) {
+      return const Scaffold(
+        body: Center(child: Text("No logged-in doctor. Please login again.")),
+      );
+    }
+
     return Scaffold(
       drawer: const DoctorDrawer(),
       appBar: AppBar(title: const Text('Home')),
@@ -51,7 +63,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
           children: [
             const DoctorProfileHeader(),
             SizedBox(height: SizeConfig.blockHeight * 3),
-
             Text(
               'Therapy Programs',
               style: textTheme.titleMedium?.copyWith(
@@ -107,10 +118,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                       ),
                     );
 
-                    final patientsCount = _toInt(
-                      data['patientsCount'],
-                      0,
-                    ); // ✅ من Firebase
+                    final patientsCount = _toInt(data['patientsCount'], 0);
 
                     return Padding(
                       padding: EdgeInsets.only(
@@ -124,7 +132,6 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => ProgramConfigScreen(
-                                doctorId: _doctorId,
                                 programId: program.id,
                                 programName: program.name,
                               ),

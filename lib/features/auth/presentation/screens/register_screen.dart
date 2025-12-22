@@ -4,8 +4,21 @@ import 'package:smart_glove/core/widgets/app_text_field.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-//import '../../patient/presentation/screens/patient_home_screen.dart'; // عدّلي المسار حسب مشروعك
 import 'login_screen.dart';
+
+const List<String> kDoctorDomains = [
+  "clinic.com",
+  "hospital.com",
+  "smartgloves.org",
+  "doc.com",
+];
+
+bool isDoctorEmail(String email) {
+  final parts = email.trim().toLowerCase().split("@");
+  if (parts.length != 2) return false;
+  final domain = parts[1];
+  return kDoctorDomains.contains(domain);
+}
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -43,35 +56,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final auth = FirebaseAuth.instance;
       final firestore = FirebaseFirestore.instance;
 
+      final email = _emailController.text.trim().toLowerCase();
+      final password = _passwordController.text;
+      final name = _nameController.text.trim();
+      final ageText = _ageController.text.trim();
+      final age = int.parse(ageText);
+
+      final role = isDoctorEmail(email) ? "doctor" : "patient";
+
       final cred = await auth.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+        email: email,
+        password: password,
       );
 
-      final user = cred.user!;
-      await user.updateDisplayName(_nameController.text.trim());
+      final user = cred.user;
+      if (user == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Register failed: user is null")),
+        );
+        return;
+      }
 
-      // 🔥 تخزين البروفايل في Firestore
+      await user.updateDisplayName(name);
+
       await firestore.collection("users").doc(user.uid).set({
         "uid": user.uid,
-        "email": _emailController.text.trim(),
-        "name": _nameController.text.trim(),
-        "age": int.parse(_ageController.text.trim()),
-        "role": "doctor", // أو patient
+        "email": email,
+        "name": name,
+        "age": age,
+        "role": role,
         "createdAt": FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Register successful")));
+      ).showSnackBar(SnackBar(content: Text("Register successful as $role")));
 
-      Navigator.pop(context); // يرجع Login
+      Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(e.message ?? "Error")));
+      ).showSnackBar(SnackBar(content: Text(e.message ?? "Register error")));
+    } on FormatException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Age must be a valid number")),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Unexpected error: $e")));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -168,6 +207,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if (!_loading) _onSignUpPressed();
                 },
               ),
+
               SizedBox(height: SizeConfig.blockHeight * 2),
 
               Row(

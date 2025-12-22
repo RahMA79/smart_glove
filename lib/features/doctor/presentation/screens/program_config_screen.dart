@@ -1,17 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
 import '../../presentation/widgets/labeled_slider.dart';
 
 class ProgramConfigScreen extends StatefulWidget {
-  final String doctorId;
   final String programId;
   final String programName;
 
   const ProgramConfigScreen({
     super.key,
-    required this.doctorId,
     required this.programId,
     required this.programName,
   });
@@ -25,6 +24,8 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
   bool _saving = false;
   bool _deleting = false;
 
+  String? _doctorId;
+
   double _sessionDurationMin = 30;
   double _targetFingerFlexionDeg = 60;
   double _motorAssistancePercent = 50;
@@ -33,6 +34,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
   @override
   void initState() {
     super.initState();
+    _doctorId = FirebaseAuth.instance.currentUser?.uid;
     _loadProgram();
   }
 
@@ -45,9 +47,11 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
     setState(() => _loading = true);
 
     try {
+      if (_doctorId == null) return;
+
       final doc = await FirebaseFirestore.instance
           .collection('doctors')
-          .doc(widget.doctorId)
+          .doc(_doctorId)
           .collection('programs')
           .doc(widget.programId)
           .get();
@@ -61,21 +65,23 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
           data['sessionDurationMin'],
           _sessionDurationMin,
         );
+
         _targetFingerFlexionDeg = _toDouble(
           data['targetFingerFlexionDeg'],
           _targetFingerFlexionDeg,
         );
+
         _motorAssistancePercent = _toDouble(
           data['motorAssistancePercent'],
           _motorAssistancePercent,
         );
+
         _emgActivationThresholdPercentMvc = _toDouble(
           data['emgActivationThresholdPercentMvc'],
           _emgActivationThresholdPercentMvc,
         );
       });
     } catch (_) {
-      // عرض القيم الافتراضية
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -87,12 +93,19 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final cs = theme.colorScheme;
+
     final disabled = _saving || _deleting;
 
     final destructiveColor = cs.error;
     final iconBaseColor = theme.brightness == Brightness.dark
         ? cs.onSurface.withOpacity(0.85)
         : cs.onSurface.withOpacity(0.70);
+
+    if (_doctorId == null) {
+      return const Scaffold(
+        body: Center(child: Text("No logged-in doctor. Please login again.")),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -105,14 +118,14 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
-                hoverColor: destructiveColor.withOpacity(0.14), // 🟥 hover
-                splashColor: destructiveColor.withOpacity(0.22), // 🟥 press
+                hoverColor: destructiveColor.withOpacity(0.14),
+                splashColor: destructiveColor.withOpacity(0.22),
                 onTap: disabled ? null : _confirmDelete,
                 child: Padding(
                   padding: const EdgeInsets.all(10),
                   child: Icon(
-                    Icons.delete_forever_rounded, // ✅ مميزة
-                    size: 26, // ✅ أكبر شوية
+                    Icons.delete_forever_rounded,
+                    size: 26,
                     color: disabled
                         ? cs.onSurface.withOpacity(0.35)
                         : iconBaseColor,
@@ -138,7 +151,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                     style: textTheme.titleMedium?.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: cs.onSurface, // ✅ Dark mode safe
+                      color: cs.onSurface,
                     ),
                   ),
                   SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -162,7 +175,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                     style: textTheme.titleMedium?.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: cs.onSurface, // ✅ Dark mode safe
+                      color: cs.onSurface,
                     ),
                   ),
                   SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -200,7 +213,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                     style: textTheme.titleMedium?.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: cs.onSurface, // ✅ Dark mode safe
+                      color: cs.onSurface,
                     ),
                   ),
                   SizedBox(height: SizeConfig.blockHeight * 1.5),
@@ -240,7 +253,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
     try {
       await FirebaseFirestore.instance
           .collection('doctors')
-          .doc(widget.doctorId)
+          .doc(_doctorId)
           .collection('programs')
           .doc(widget.programId)
           .update({
@@ -274,17 +287,14 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: cs.surface, // ✅ Dark mode safe
+        backgroundColor: cs.surface,
         title: Text(
           'Delete Program',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: cs.onSurface, // ✅
-          ),
+          style: TextStyle(fontWeight: FontWeight.w700, color: cs.onSurface),
         ),
         content: Text(
           'Are you sure you want to permanently delete this program?\nThis action cannot be undone.',
-          style: TextStyle(color: cs.onSurface.withOpacity(0.85)), // ✅
+          style: TextStyle(color: cs.onSurface.withOpacity(0.85)),
         ),
         actions: [
           TextButton(
@@ -311,7 +321,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
     try {
       await FirebaseFirestore.instance
           .collection('doctors')
-          .doc(widget.doctorId)
+          .doc(_doctorId)
           .collection('programs')
           .doc(widget.programId)
           .delete();
