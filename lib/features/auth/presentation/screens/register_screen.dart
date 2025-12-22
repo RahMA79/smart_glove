@@ -1,4 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/app_text_field.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
@@ -36,6 +40,68 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _loading = false;
+  File? _image;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> loadSavedImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('profile_image');
+
+    if (path != null && File(path).existsSync()) {
+      setState(() {
+        _image = File(path);
+      });
+    }
+  }
+
+  Future<void> pickAndSaveImage() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+    );
+
+    if (pickedFile == null) return;
+
+    // الحصول على مجلد التطبيق الداخلي
+    final directory = await getApplicationDocumentsDirectory();
+    final String newPath = '${directory.path}/profile_image.png';
+
+    // نسخ الصورة للمجلد الداخلي
+    final File newImage = await File(pickedFile.path).copy(newPath);
+
+    // حفظ المسار في SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profile_image', newImage.path);
+
+    // تحديث الحالة لإظهار الصورة
+    setState(() {
+      _image = newImage;
+    });
+  }
+
+  Widget buildProfileImage() {
+    if (_image != null) {
+      return Image.file(_image!, fit: BoxFit.cover, width: 120, height: 120);
+    } else {
+      return Image.asset(
+        'assets/images/logo.png',
+        fit: BoxFit.cover,
+        width: 120,
+        height: 120,
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -197,6 +263,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if (age < 5 || age > 120) return 'Enter a valid age';
                   return null;
                 },
+              ),
+              TextButton.icon(
+                onPressed: pickImage,
+                icon: Icon(Icons.image),
+                label: Text("Upload Image"),
               ),
 
               SizedBox(height: SizeConfig.blockHeight * 3),

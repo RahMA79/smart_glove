@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/drawer_menu.dart';
 import '../../data/models/patient_request_model.dart';
@@ -14,8 +15,14 @@ class NewPatientRequestScreen extends StatefulWidget {
 }
 
 class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
-  // مؤقت لحد FirebaseAuth
-  static const String _doctorId = 'vhDs4fPhUjKvJVqVqJImj7';
+  // ✅ UID بتاع الدكتور من FirebaseAuth
+  String? _doctorId;
+
+  @override
+  void initState() {
+    super.initState();
+    _doctorId = FirebaseAuth.instance.currentUser?.uid;
+  }
 
   Future<void> _accept({
     required String requestId,
@@ -23,6 +30,14 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
     required String patientIdFromRequest,
   }) async {
     try {
+      if (_doctorId == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("No logged-in doctor.")));
+        return;
+      }
+
       final db = FirebaseFirestore.instance;
 
       final patientsCol = db
@@ -30,9 +45,12 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
           .doc(_doctorId)
           .collection('patients');
 
-      final patientRef = patientIdFromRequest.trim().isEmpty
+      final String trimmedPatientId = patientIdFromRequest.trim();
+
+      // ✅ لو patientId مش موجود في الريكوست، اعمل id جديد
+      final patientRef = trimmedPatientId.isEmpty
           ? patientsCol.doc()
-          : patientsCol.doc(patientIdFromRequest.trim());
+          : patientsCol.doc(trimmedPatientId);
 
       final requestRef = db
           .collection('doctors')
@@ -48,7 +66,7 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
           'createdAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
 
-        // ✅ حذف الريكوست بعد القبول (بدون Index)
+        // ✅ حذف الريكوست بعد القبول
         tx.delete(requestRef);
       });
 
@@ -66,6 +84,14 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
 
   Future<void> _reject({required String requestId}) async {
     try {
+      if (_doctorId == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("No logged-in doctor.")));
+        return;
+      }
+
       await FirebaseFirestore.instance
           .collection('doctors')
           .doc(_doctorId)
@@ -88,6 +114,12 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (_doctorId == null) {
+      return const Scaffold(
+        body: Center(child: Text("No logged-in doctor. Please login again.")),
+      );
+    }
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,

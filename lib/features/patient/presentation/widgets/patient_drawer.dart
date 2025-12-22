@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:smart_glove/features/auth/presentation/widgets/logout_function.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/doctor_notifications_screen.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/settings_screen.dart';
 
 class PatientDrawer extends StatelessWidget {
   final String patientName;
@@ -34,7 +35,9 @@ class PatientDrawer extends StatelessWidget {
 
           drawerItem(Icons.person_outline, "Profile", () {}),
 
-          drawerItem(Icons.bar_chart, "Progress", () {}),
+          drawerItem(Icons.bar_chart, "Progress", () {
+            Navigator.pop(context);
+          }),
 
           // Notifications with red badge
           ListTile(
@@ -64,12 +67,26 @@ class PatientDrawer extends StatelessWidget {
                 ),
               ],
             ),
-            onTap: () {},
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DoctorNotificationsScreen(),
+                ),
+              );
+            },
           ),
 
           drawerItem(Icons.history, "Session History", () {}),
 
-          drawerItem(Icons.settings_outlined, "Settings", () {}),
+          drawerItem(Icons.settings_outlined, "Settings", () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
+          }),
 
           const Spacer(),
 

@@ -24,7 +24,16 @@ class _MyPatientsScreenState extends State<MyPatientsScreen> {
 
   int _toInt(dynamic v, int fallback) {
     if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v) ?? fallback;
     return fallback;
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> _patientsStream(String doctorId) {
+    return FirebaseFirestore.instance
+        .collection('doctors')
+        .doc(doctorId)
+        .collection('patients')
+        .snapshots();
   }
 
   @override
@@ -56,28 +65,47 @@ class _MyPatientsScreenState extends State<MyPatientsScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('doctors')
-                .doc(_doctorId)
-                .collection('patients')
-                .orderBy('createdAt', descending: true)
-                .snapshots(),
+          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: _patientsStream(_doctorId!),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
+
               if (snapshot.hasError) {
-                return Center(child: Text("Error: ${snapshot.error}"));
+                return Center(
+                  child: Text(
+                    "Error: ${snapshot.error}\n"
+                    "doctorId: $_doctorId\n"
+                    "Path: doctors/$_doctorId/patients",
+                    textAlign: TextAlign.center,
+                  ),
+                );
               }
 
               final docs = snapshot.data?.docs ?? [];
               if (docs.isEmpty) {
-                return const Center(child: Text("No patients yet."));
+                return Center(
+                  child: Text(
+                    "No patients yet.\n"
+                    "doctorId: $_doctorId\n"
+                    "Path: doctors/$_doctorId/patients",
+                    textAlign: TextAlign.center,
+                  ),
+                );
               }
 
+              docs.sort((a, b) {
+                final aTs = a.data()['createdAt'];
+                final bTs = b.data()['createdAt'];
+                final aMs = (aTs is Timestamp) ? aTs.millisecondsSinceEpoch : 0;
+                final bMs = (bTs is Timestamp) ? bTs.millisecondsSinceEpoch : 0;
+                return bMs.compareTo(aMs);
+              });
+
               final patients = docs.map((d) {
-                final data = d.data() as Map<String, dynamic>;
+                final data = d.data();
+
                 return DoctorPatientModel(
                   name: (data['name'] ?? '').toString(),
                   condition: (data['condition'] ?? '').toString(),
