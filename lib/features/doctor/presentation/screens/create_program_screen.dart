@@ -78,7 +78,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             const SizedBox(height: 8),
 
             DropdownButtonFormField<String>(
-              value: _selectedInjuryType,
+              initialValue: _selectedInjuryType,
               items: const [
                 DropdownMenuItem(value: 'Stroke', child: Text('Stroke')),
                 DropdownMenuItem(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
+import 'package:smart_glove/features/patient/patient_report/data/models/patient_report_model.dart';
+import 'package:smart_glove/features/patient/patient_report/presentation/screens/patient_report_screen.dart';
 
 class FeedbackScreen extends StatefulWidget {
   final String sessionTitle;
@@ -13,6 +15,22 @@ class FeedbackScreen extends StatefulWidget {
 class _FeedbackScreenState extends State<FeedbackScreen> {
   int painRating = 0;
   int easeRating = 0;
+  late PatientReportModel report;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    report = PatientReportModel(
+      conditionTitle: 'sesstion1',
+      duration: Duration(minutes: 1),
+      exercisesDone: 1,
+      painLevel: painRating,
+      sessionAccuracy: 99,
+      patientLevel: 'simi',
+      progressRate: 99,
+    );
+  }
 
   Widget _starsRow({required int value, required ValueChanged<int> onSelect}) {
     return Row(
@@ -108,7 +126,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Feedback submitted")),
                 );
-                Navigator.popUntil(context, (route) => route.isFirst);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PatientReportScreen(report: report),
+                  ),
+                );
               },
             ),
           ],

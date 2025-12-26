@@ -163,7 +163,6 @@ class _SessionScreenState extends State<SessionScreen> {
 
                   const SizedBox(height: 14),
 
-                  // ✅ شريط بسيط للمعلومة
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(

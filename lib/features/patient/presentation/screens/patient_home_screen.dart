@@ -90,7 +90,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
     return Scaffold(
       drawer: PatientDrawer(patientName: _patientName, userId: widget.userId),
-      appBar: AppBar(title: const Text('Home')), // ✅ بدون Settings
+      appBar: AppBar(title: const Text('Home')),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: SizeConfig.blockWidth * 4,

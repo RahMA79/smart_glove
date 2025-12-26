@@ -33,7 +33,6 @@ class SessionDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ Title (basic)
             Text(
               sessionTitle,
               style: theme.textTheme.headlineSmall?.copyWith(
@@ -44,7 +43,6 @@ class SessionDetailsScreen extends StatelessWidget {
 
             SizedBox(height: SizeConfig.blockHeight * 1.4),
 
-            // ✅ Info row (duration) - نفس روح Doctor screens (simple row + chip)
             Row(
               children: [
                 Container(
@@ -78,7 +76,6 @@ class SessionDetailsScreen extends StatelessWidget {
 
             SizedBox(height: SizeConfig.blockHeight * 2.0),
 
-            // ✅ Description card (أنضف وأبسط)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),
@@ -107,7 +104,6 @@ class SessionDetailsScreen extends StatelessWidget {
 
             SizedBox(height: SizeConfig.blockHeight * 3),
 
-            // ✅ Start button ثابت في آخر الصفحة (basic)
             PrimaryButton(
               text: "Start Session",
               onPressed: () {
