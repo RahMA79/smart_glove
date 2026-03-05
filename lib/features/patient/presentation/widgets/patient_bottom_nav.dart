@@ -56,6 +56,11 @@ class PatientBottomNav extends StatelessWidget {
             label: "Sessions",
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.add),
+            activeIcon: Icon(Icons.add_rounded),
+            label: "Request doctor",
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),
             activeIcon: Icon(Icons.settings_rounded),
             label: "Settings",

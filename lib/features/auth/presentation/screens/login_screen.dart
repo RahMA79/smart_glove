@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/app_text_field.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
+import 'package:smart_glove/sensor.dart';
 
 import '../widgets/login_function.dart';
 import 'register_screen.dart';
@@ -131,6 +132,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
+
+              TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SensorScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text('sensor screen'),
+                  ),
             ],
           ),
         ),

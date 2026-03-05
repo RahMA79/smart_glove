@@ -8,6 +8,7 @@ import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/settings_screen.dart';
 import 'package:smart_glove/features/patient/presentation/widgets/patient_program_card.dart';
 import 'package:smart_glove/features/patient/presentation/widgets/patient_bottom_nav.dart';
+import 'package:smart_glove/features/patient/reqestscreen.dart';
 import 'package:smart_glove/features/patient/session/presentation/screens/session_details_screen.dart';
 
 import '../widgets/patient_drawer.dart';
@@ -24,7 +25,7 @@ class PatientHomeScreen extends StatefulWidget {
 class _PatientHomeScreenState extends State<PatientHomeScreen> {
   int _navIndex = 0;
 
-  String _patientName = '...';
+  String _patientName = '';
   File? _profileImage;
 
   final ImagePicker _picker = ImagePicker();
@@ -177,7 +178,14 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             );
           }
 
+
           if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => doctorrequest()),
+            );
+          }
+          if (index == 3) {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => SettingsScreen()),
