@@ -27,9 +27,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       duration: Duration(minutes: 1),
       exercisesDone: 1,
       painLevel: painRating,
-      sessionAccuracy: 99,
+      sessionAccuracy: 0.99,
       patientLevel: 'Simi',
-      progressRate: 99,
+      progressRate: 0.99,
     );
   }
 
