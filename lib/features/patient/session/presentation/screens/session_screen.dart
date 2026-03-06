@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 import 'feedback_screen.dart';
 
@@ -91,7 +92,7 @@ class _SessionScreenState extends State<SessionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Session In Progress",
+              context.tr('Session In Progress'),
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.2,
@@ -99,7 +100,7 @@ class _SessionScreenState extends State<SessionScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              "Keep going until the timer ends.",
+              context.tr('Keep going until the timer ends.'),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: cs.onSurface.withOpacity(0.65),
               ),
@@ -149,7 +150,7 @@ class _SessionScreenState extends State<SessionScreen> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              "Remaining",
+                              context.tr('Remaining'),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: cs.onSurface.withOpacity(0.60),
                                 fontWeight: FontWeight.w600,
@@ -180,13 +181,16 @@ class _SessionScreenState extends State<SessionScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "Total",
+                          context.tr('Total'),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                         Text(
-                          "${widget.durationMinutes} min",
+                          context.tr(
+                            '{count} min',
+                            params: {'count': '${widget.durationMinutes}'},
+                          ),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w900,
                           ),
@@ -213,9 +217,12 @@ class _SessionScreenState extends State<SessionScreen> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text(
-                  "Stop",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                child: Text(
+                  context.tr('Stop'),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ),

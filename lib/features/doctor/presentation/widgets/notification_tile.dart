@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
+
 import '../../data/models/doctor_notification_model.dart';
 
 class NotificationTile extends StatelessWidget {
@@ -22,13 +24,21 @@ class NotificationTile extends StatelessWidget {
     }
   }
 
-  String _timeLabel(DateTime dt) {
+  String _timeLabel(BuildContext context, DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
-    if (diff.inMinutes < 60) return "${diff.inMinutes} m";
-    if (diff.inHours < 24) return "${diff.inHours} h";
-    return "${diff.inDays} d";
+    if (diff.inMinutes < 60) {
+      final n = diff.inMinutes;
+      return isAr ? "$n د" : "$n m";
+    }
+    if (diff.inHours < 24) {
+      final n = diff.inHours;
+      return isAr ? "$n س" : "$n h";
+    }
+    final n = diff.inDays;
+    return isAr ? "$n ي" : "$n d";
   }
 
   @override
@@ -38,7 +48,11 @@ class NotificationTile extends StatelessWidget {
     final muted = onSurface.withOpacity(0.65);
 
     final icon = _iconForType(item.type);
-    final time = _timeLabel(item.createdAt);
+    final time = _timeLabel(context, item.createdAt);
+
+    // Treat item.title/subtitle as localization keys (fallback to same string if not found)
+    final title = context.tr(item.title);
+    final subtitle = context.tr(item.subtitle);
 
     return Material(
       color: theme.cardColor,
@@ -68,7 +82,7 @@ class NotificationTile extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            item.title,
+                            title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleMedium?.copyWith(
@@ -84,22 +98,35 @@ class NotificationTile extends StatelessWidget {
                           time,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: muted,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      item.subtitle,
+                      subtitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(color: muted),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: muted,
+                        height: 1.35,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right, color: muted),
+              const SizedBox(width: 10),
+              if (!item.isRead)
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
             ],
           ),
         ),

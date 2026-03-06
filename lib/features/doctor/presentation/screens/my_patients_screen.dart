@@ -5,6 +5,7 @@ import 'package:smart_glove/features/doctor/presentation/screens/patient_overvie
 import 'package:smart_glove/features/doctor/presentation/widgets/drawer_menu.dart';
 import '../../data/models/doctor_patient_model.dart';
 import '../widgets/patient_list_card.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class MyPatientsScreen extends StatefulWidget {
   const MyPatientsScreen({super.key});
@@ -41,8 +42,8 @@ class _MyPatientsScreenState extends State<MyPatientsScreen> {
     final theme = Theme.of(context);
 
     if (_doctorId == null) {
-      return const Scaffold(
-        body: Center(child: Text("No logged-in doctor. Please login again.")),
+      return Scaffold(
+        body: Center(child: Text(context.tr('no_logged_in_doctor'))),
       );
     }
 
@@ -50,7 +51,7 @@ class _MyPatientsScreenState extends State<MyPatientsScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       drawer: const DoctorDrawer(),
       appBar: AppBar(
-        title: const Text("My Patients"),
+        title: Text(context.tr('my_patients')),
         centerTitle: true,
         actions: [
           Padding(

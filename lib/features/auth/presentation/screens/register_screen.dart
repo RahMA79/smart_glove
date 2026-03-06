@@ -9,6 +9,8 @@ import 'package:smart_glove/core/widgets/primary_button.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
+import '../widgets/login_function.dart' show ensureRoleDoc;
 
 const List<String> kDoctorDomains = [
   "clinic.com",
@@ -139,7 +141,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (user == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Register failed: user is null")),
+          SnackBar(content: Text(context.tr('Register failed: user is null'))),
         );
         return;
       }
@@ -155,11 +157,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
         "createdAt": FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
+      await ensureRoleDoc(
+        uid: user.uid,
+        email: email,
+        role: role,
+        name: name,
+      );
+
       if (!mounted) return;
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Register successful as $role")));
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr('Register successful as {role}', params: {'role': role}),
+          ),
+        ),
+      );
 
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
@@ -170,13 +185,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } on FormatException {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Age must be a valid number")),
+        SnackBar(content: Text(context.tr('Age must be a valid number'))),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Unexpected error: $e")));
+      ).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr('Unexpected error: {error}', params: {'error': '$e'}),
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -187,7 +208,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     SizeConfig.init(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      appBar: AppBar(title: Text(context.tr('Create Account'))),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: SizeConfig.blockWidth * 5,
@@ -200,7 +221,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: SizeConfig.blockHeight * 1.5),
 
               Text(
-                'Sign up',
+                context.tr('Sign up'),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -209,11 +230,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: SizeConfig.blockHeight * 3),
 
               AppTextField(
-                label: 'Full Name',
-                hint: 'Enter your full name',
+                label: context.tr('Full Name'),
+                hint: context.tr('Enter your full name'),
                 controller: _nameController,
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Name is required';
+                  if (v == null || v.trim().isEmpty)
+                    return context.tr('Name is required');
                   return null;
                 },
               ),
@@ -221,14 +243,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: SizeConfig.blockHeight * 2),
 
               AppTextField(
-                label: 'Email',
-                hint: 'Enter your email',
+                label: context.tr('Email'),
+                hint: context.tr('Enter your email'),
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 validator: (v) {
                   final value = v?.trim() ?? '';
-                  if (value.isEmpty) return 'Email is required';
-                  if (!value.contains('@')) return 'Enter a valid email';
+                  if (value.isEmpty) return context.tr('Email is required');
+                  if (!value.contains('@'))
+                    return context.tr('Enter a valid email');
                   return null;
                 },
               ),
@@ -236,14 +259,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: SizeConfig.blockHeight * 2),
 
               AppTextField(
-                label: 'Password',
-                hint: 'Enter your password',
+                label: context.tr('Password'),
+                hint: context.tr('Enter your password'),
                 controller: _passwordController,
                 obscureText: true,
                 validator: (v) {
                   final value = v ?? '';
-                  if (value.isEmpty) return 'Password is required';
-                  if (value.length < 6) return 'Min 6 characters';
+                  if (value.isEmpty)
+                    return context.tr('Password is required');
+                  if (value.length < 6) return context.tr('Min 6 characters');
                   return null;
                 },
               ),
@@ -251,29 +275,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: SizeConfig.blockHeight * 2),
 
               AppTextField(
-                label: 'Age',
-                hint: 'Enter your age',
+                label: context.tr('Age'),
+                hint: context.tr('Enter your age'),
                 controller: _ageController,
                 keyboardType: TextInputType.number,
                 validator: (v) {
                   final value = v?.trim() ?? '';
-                  if (value.isEmpty) return 'Age is required';
+                  if (value.isEmpty) return context.tr('Age is required');
                   final age = int.tryParse(value);
-                  if (age == null) return 'Enter a valid number';
-                  if (age < 5 || age > 120) return 'Enter a valid age';
+                  if (age == null) return context.tr('Enter a valid number');
+                  if (age < 5 || age > 120) return context.tr('Enter a valid age');
                   return null;
                 },
               ),
               TextButton.icon(
                 onPressed: pickImage,
                 icon: Icon(Icons.image),
-                label: Text("Upload Image"),
+                label: Text(context.tr('Upload Image')),
               ),
 
               SizedBox(height: SizeConfig.blockHeight * 3),
 
               PrimaryButton(
-                text: _loading ? 'Creating...' : 'Create Account',
+                text: _loading
+                    ? context.tr('Creating...')
+                    : context.tr('Create Account'),
                 onPressed: () {
                   if (!_loading) _onSignUpPressed();
                 },
@@ -285,7 +311,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Already have an account?',
+                    context.tr('Already have an account?'),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   TextButton(
@@ -295,7 +321,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         MaterialPageRoute(builder: (_) => const LoginScreen()),
                       );
                     },
-                    child: const Text('Login'),
+                    child: Text(context.tr('Login')),
                   ),
                 ],
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 import 'session_screen.dart';
 
@@ -62,7 +63,9 @@ class SessionDetailsScreen extends StatelessWidget {
                       Icon(Icons.timer_rounded, size: 18, color: cs.primary),
                       const SizedBox(width: 6),
                       Text(
-                        "$durationMinutes min",
+                        context.tr('{count} min', params: {
+                          'count': '$durationMinutes',
+                        }),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: cs.onSurface,
@@ -105,7 +108,7 @@ class SessionDetailsScreen extends StatelessWidget {
             SizedBox(height: SizeConfig.blockHeight * 3),
 
             PrimaryButton(
-              text: "Start Session",
+              text: context.tr('Start Session'),
               onPressed: () {
                 Navigator.push(
                   context,

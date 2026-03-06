@@ -2,10 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 import 'package:smart_glove/features/auth/presentation/widgets/logout_function.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/patient_progress_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/settings_screen.dart';
-import 'package:smart_glove/features/doctor/presentation/screens/doctor_notifications_screen.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/doctor_notifications_screen.dart'; // ⚠️ مؤقتًا لو مفيش PatientNotifications
 
 class PatientDrawer extends StatefulWidget {
   final String patientName;
@@ -48,7 +49,6 @@ class _PatientDrawerState extends State<PatientDrawer> {
       backgroundColor: theme.scaffoldBackgroundColor,
       child: Column(
         children: [
-          /// ===== Header (نفس ستايل الدكتور) =====
           DrawerHeader(
             decoration: BoxDecoration(color: theme.scaffoldBackgroundColor),
             child: Row(
@@ -79,32 +79,50 @@ class _PatientDrawerState extends State<PatientDrawer> {
             ),
           ),
 
-          _drawerItem(context, Icons.home_outlined, 'Home', () {
-            Navigator.pop(context);
-          }),
+          _drawerItem(
+            context,
+            Icons.home_outlined,
+            context.tr('drawer_home'),
+            () {
+              Navigator.pop(context);
+            },
+          ),
 
-          _drawerItem(context, Icons.person_outline, 'Profile', () {
-            Navigator.pop(context);
-          }),
+          _drawerItem(
+            context,
+            Icons.person_outline,
+            context.tr('drawer_profile'),
+            () {
+              Navigator.pop(context);
+            },
+          ),
 
-          _drawerItem(context, Icons.bar_chart_rounded, 'Progress', () {
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    PatientProgressScreen(patientName: widget.patientName),
-              ),
-            );
-          }),
+          _drawerItem(
+            context,
+            Icons.bar_chart_rounded,
+            context.tr('drawer_progress'),
+            () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      PatientProgressScreen(patientName: widget.patientName),
+                ),
+              );
+            },
+          ),
 
-          /// ===== Notifications + Badge =====
+          /// Notifications + Badge
           ListTile(
             leading: Icon(
               Icons.notifications_outlined,
               color: theme.iconTheme.color,
             ),
-            title: Text('Notifications', style: theme.textTheme.bodyMedium),
+            title: Text(
+              context.tr('drawer_notifications'),
+              style: theme.textTheme.bodyMedium,
+            ),
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
@@ -122,6 +140,9 @@ class _PatientDrawerState extends State<PatientDrawer> {
             ),
             onTap: () {
               Navigator.pop(context);
+
+              // ✅ الأفضل: اعملي شاشة Notifications خاصة بالمريض
+              // لو مش موجودة عندك حاليًا، ده مؤقت:
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -131,23 +152,39 @@ class _PatientDrawerState extends State<PatientDrawer> {
             },
           ),
 
-          _drawerItem(context, Icons.history, 'Session History', () {
-            Navigator.pop(context);
-          }),
+          _drawerItem(
+            context,
+            Icons.history,
+            context.tr('drawer_session_history'),
+            () {
+              Navigator.pop(context);
+              // TODO: افتحي Session History screen لو عندك
+            },
+          ),
 
-          _drawerItem(context, Icons.settings_outlined, 'Settings', () {
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            );
-          }),
+          _drawerItem(
+            context,
+            Icons.settings_outlined,
+            context.tr('drawer_settings'),
+            () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+          ),
 
           const Spacer(),
 
-          _drawerItem(context, Icons.logout_rounded, 'Logout', () async {
-            await LogoutFunction.logout(context);
-          }),
+          _drawerItem(
+            context,
+            Icons.logout_rounded,
+            context.tr('drawer_logout'),
+            () async {
+              await LogoutFunction.logout(context);
+            },
+          ),
         ],
       ),
     );

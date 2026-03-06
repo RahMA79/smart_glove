@@ -18,11 +18,19 @@ class _PatientProgressScreenState extends State<PatientProgressScreen> {
       PatientProgressData.demo(); // TODO: from API
 
   @override
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context).languageCode;
 
-    final chartTitle = _tabIndex == 0 ? "EMG Data" : "Flex Angles";
-    final chartUnit = _tabIndex == 0 ? "µV" : "°";
+    final chartTitle = _tabIndex == 0
+        ? (locale == 'ar' ? "بيانات EMG" : "EMG Data")
+        : (locale == 'ar' ? "زوايا الانثناء" : "Flex Angles");
+
+    final chartUnit = _tabIndex == 0
+        ? (locale == 'ar' ? "ميكروفولت" : "µV")
+        : (locale == 'ar' ? "درجة" : "°");
+
     final chartPoints = _tabIndex == 0 ? _data.emg : _data.flex;
 
     return Scaffold(
@@ -47,7 +55,7 @@ class _PatientProgressScreenState extends State<PatientProgressScreen> {
                   ),
                   const SizedBox(height: 16),
                   ProgressLineChartCard(
-                    title: "Pain Angles",
+                    title: locale == 'ar' ? "زوايا الألم" : "Pain Angles",
                     unit: "",
                     points: _data.pain,
                   ),

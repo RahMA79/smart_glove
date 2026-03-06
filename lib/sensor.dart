@@ -56,16 +56,16 @@ class _SensorScreenState extends State<SensorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Glove Data")),
+      appBar: AppBar(title: Text(context.tr('glove_data'))),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            buildText("Ebham", ebham),
-            buildText("Sababa", sababa),
-            buildText("Wosta", wosta),
-            buildText("Bensr", bensr),
-            buildText("Khansr", khansr),
+            buildText(context.tr('finger_thumb'), ebham),
+            buildText(context.tr('finger_index'), sababa),
+            buildText(context.tr('finger_middle'), wosta),
+            buildText(context.tr('finger_ring'), bensr),
+            buildText(context.tr('finger_pinky'), khansr),
             SizedBox(height: 20),
             buildText("EMG Avg", emg),
             buildText("EMG Peak", peak),
@@ -181,7 +181,7 @@ class _SensorScreenState extends State<SensorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Glove Control & EMG")),
+      appBar: AppBar(title: Text(context.tr('glove_control_emg'))),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -189,11 +189,11 @@ class _SensorScreenState extends State<SensorScreen> {
             SizedBox(height: 20),
 
             // ===== FLEX DATA =====
-            buildText("Ebham", ebham),
-            buildText("Sababa", sababa),
-            buildText("Wosta", wosta),
-            buildText("Bensr", bensr),
-            buildText("Khansr", khansr),
+            buildText(context.tr('finger_thumb'), ebham),
+            buildText(context.tr('finger_index'), sababa),
+            buildText(context.tr('finger_middle'), wosta),
+            buildText(context.tr('finger_ring'), bensr),
+            buildText(context.tr('finger_pinky'), khansr),
 
             SizedBox(height: 20),
 
@@ -207,26 +207,26 @@ class _SensorScreenState extends State<SensorScreen> {
             SizedBox(height: 30),
             Divider(),
 
-            Text("Servo Control",
+            Text(context.tr('servo_control'),
                 style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Colors.blue)),
 
             // ===== Servo Sliders =====
-            buildSlider("Ebham Servo", servoEbham,
+            buildSlider(context.tr('finger_thumb_servo'), servoEbham,
                 (v) => servoEbham = v),
 
-            buildSlider("Sababa Servo", servoSababa,
+            buildSlider(context.tr('finger_index_servo'), servoSababa,
                 (v) => servoSababa = v),
 
-            buildSlider("Wosta Servo", servoWosta,
+            buildSlider(context.tr('finger_middle_servo'), servoWosta,
                 (v) => servoWosta = v),
 
-            buildSlider("Bensr Servo", servoBensr,
+            buildSlider(context.tr('finger_ring_servo'), servoBensr,
                 (v) => servoBensr = v),
 
-            buildSlider("Khansr Servo", servoKhansr,
+            buildSlider(context.tr('finger_pinky_servo'), servoKhansr,
                 (v) => servoKhansr = v),
 
             SizedBox(height: 40),
@@ -241,6 +241,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class SensorScreen extends StatefulWidget {
   @override
@@ -354,7 +355,7 @@ class _SensorScreenState extends State<SensorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Glove Control & EMG")),
+      appBar: AppBar(title: Text(context.tr('glove_control_emg'))),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Column(
@@ -362,11 +363,11 @@ class _SensorScreenState extends State<SensorScreen> {
             SizedBox(height: 10),
 
             // ===== FLEX DATA =====
-            buildText("Ebham", ebham),
-            buildText("Sababa", sababa),
-            buildText("Wosta", wosta),
-            buildText("Bensr", bensr),
-            buildText("Khansr", khansr),
+            buildText(context.tr('finger_thumb'), ebham),
+            buildText(context.tr('finger_index'), sababa),
+            buildText(context.tr('finger_middle'), wosta),
+            buildText(context.tr('finger_ring'), bensr),
+            buildText(context.tr('finger_pinky'), khansr),
             SizedBox(height: 20),
 
             // ===== EMG DATA =====
@@ -379,7 +380,7 @@ class _SensorScreenState extends State<SensorScreen> {
 
             Divider(),
             SizedBox(height: 10),
-            Text("Servo Control",
+            Text(context.tr('servo_control'),
                 style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -387,11 +388,11 @@ class _SensorScreenState extends State<SensorScreen> {
             SizedBox(height: 10),
 
             // ===== SERVO SLIDERS =====
-            buildSlider("Ebham Servo", servoEbham, (v) => servoEbham = v),
-            buildSlider("Sababa Servo", servoSababa, (v) => servoSababa = v),
-            buildSlider("Wosta Servo", servoWosta, (v) => servoWosta = v),
-            buildSlider("Bensr Servo", servoBensr, (v) => servoBensr = v),
-            buildSlider("Khansr Servo", servoKhansr, (v) => servoKhansr = v),
+            buildSlider(context.tr('finger_thumb_servo'), servoEbham, (v) => servoEbham = v),
+            buildSlider(context.tr('finger_index_servo'), servoSababa, (v) => servoSababa = v),
+            buildSlider(context.tr('finger_middle_servo'), servoWosta, (v) => servoWosta = v),
+            buildSlider(context.tr('finger_ring_servo'), servoBensr, (v) => servoBensr = v),
+            buildSlider(context.tr('finger_pinky_servo'), servoKhansr, (v) => servoKhansr = v),
 
             SizedBox(height: 30),
           ],

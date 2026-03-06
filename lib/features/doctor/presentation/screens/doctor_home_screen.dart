@@ -9,6 +9,10 @@ import 'package:smart_glove/features/doctor/presentation/screens/program_config_
 import 'package:smart_glove/features/doctor/presentation/widgets/doctor_profile_header.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/drawer_menu.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/program_card.dart';
+import 'package:smart_glove/features/doctor/presentation/widgets/doctor_bottom_nav.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/new_patient_request_screen.dart';
+import 'package:smart_glove/features/doctor/presentation/screens/settings_screen.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class DoctorHomeScreen extends StatefulWidget {
   const DoctorHomeScreen({super.key});
@@ -19,6 +23,7 @@ class DoctorHomeScreen extends StatefulWidget {
 
 class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   String? _doctorId;
+  int _navIndex = 0;
 
   @override
   void initState() {
@@ -42,14 +47,16 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     if (_doctorId == null) {
-      return const Scaffold(
-        body: Center(child: Text("No logged-in doctor. Please login again.")),
+      return Scaffold(
+        body: Center(
+          child: Text(context.tr('No logged-in doctor. Please login again.')),
+        ),
       );
     }
 
     return Scaffold(
       drawer: const DoctorDrawer(),
-      appBar: AppBar(title: const Text('Home')),
+      appBar: AppBar(title: Text(context.tr('Home'))),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: SizeConfig.blockWidth * 4,
@@ -61,7 +68,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             const DoctorProfileHeader(),
             SizedBox(height: SizeConfig.blockHeight * 3),
             Text(
-              'Therapy Programs',
+              context.tr('Therapy Programs'),
               style: textTheme.titleMedium?.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -81,12 +88,17 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
+                  return Text(
+                    context.tr(
+                      'error_with_details',
+                      params: {'error': '${snapshot.error}'},
+                    ),
+                  );
                 }
 
                 final docs = snapshot.data?.docs ?? [];
                 if (docs.isEmpty) {
-                  return const Text('No programs yet.');
+                  return Text(context.tr('no_programs_yet'));
                 }
 
                 return Column(
@@ -145,7 +157,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             SizedBox(height: SizeConfig.blockHeight * 3),
 
             PrimaryButton(
-              text: 'Create New Program',
+              text: context.tr('Create New Program'),
               onPressed: () async {
                 await Navigator.push(
                   context,
@@ -157,6 +169,36 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: DoctorBottomNav(
+        currentIndex: _navIndex,
+        onChanged: (index) {
+          setState(() => _navIndex = index);
+          if (index == 0) return;
+
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CreateProgramScreen()),
+            );
+          }
+
+          if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const NewPatientRequestScreen(),
+              ),
+            );
+          }
+
+          if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
+          }
+        },
       ),
     );
   }

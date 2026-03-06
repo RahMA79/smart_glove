@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class NotificationsPatientCard extends StatelessWidget {
   final String title;
@@ -66,7 +67,7 @@ class NotificationsPatientCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      "Notiations Patient",
+                      context.tr('patient_notifications'),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w700,

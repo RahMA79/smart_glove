@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_colors.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class DownloadButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -23,7 +24,7 @@ class DownloadButton extends StatelessWidget {
           ),
         ),
         child: Text(
-          "Download Report",
+          context.tr('Download Report'),
           style: textTheme.titleMedium?.copyWith(color: Colors.white),
         ),
       ),

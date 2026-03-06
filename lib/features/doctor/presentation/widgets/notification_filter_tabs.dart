@@ -1,3 +1,4 @@
+import 'package:smart_glove/core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class NotificationFilterTabs extends StatelessWidget {
@@ -23,13 +24,13 @@ class NotificationFilterTabs extends StatelessWidget {
       child: Row(
         children: [
           _TabPill(
-            label: "All",
+            label: context.tr('All'),
             selected: index == 0,
             onTap: () => onChanged(0),
           ),
           const SizedBox(width: 6),
           _TabPill(
-            label: "Unread",
+            label: context.tr('Unread'),
             selected: index == 1,
             onTap: () => onChanged(1),
           ),

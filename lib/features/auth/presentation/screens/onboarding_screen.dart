@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:smart_glove/core/utils/size_config.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
+import 'package:smart_glove/core/localization/locale_notifier.dart';
+import 'package:smart_glove/core/utils/size_config.dart';
 
 import 'login_screen.dart';
 
@@ -16,38 +19,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _controller = PageController();
   int _index = 0;
 
-  final List<_OnboardingData> _pages = const [
-    _OnboardingData(
-      imagePath: 'assets/images/onboarding1.png',
-      title: 'Track Your Recovery Easily',
-      subtitle: 'Monitor exercises with real-time progress.',
-      accent: Color(0xFF2B6DFF),
-    ),
-    _OnboardingData(
-      imagePath: 'assets/images/onboarding2.png',
-      title: 'Smart AI-Based Insights',
-      subtitle: 'AI analyzes activity and guides recovery.',
-      accent: Color(0xFF6E56FF),
-    ),
-    _OnboardingData(
-      imagePath: 'assets/images/onboarding3.png',
-      title: 'Personalized Therapy Programs',
-      subtitle: 'Custom programs based on your condition.',
-      accent: Color(0xFF18A0FB),
-    ),
-  ];
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  bool get _isLast => _index == _pages.length - 1;
-
   Future<void> _goToLogin() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool("seenOnboarding", true);
+    await prefs.setBool('seenOnboarding', true);
 
     if (!mounted) return;
     Navigator.pushReplacement(
@@ -56,8 +30,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  void _onNext() {
-    if (_isLast) {
+  void _onNext(int pagesCount) {
+    final isLast = _index == pagesCount - 1;
+    if (isLast) {
       _goToLogin();
       return;
     }
@@ -70,6 +45,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _onSkip() => _goToLogin();
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
     final theme = Theme.of(context);
@@ -77,6 +58,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     final bgTop = isDark ? const Color(0xFF070B16) : const Color(0xFFF7F9FB);
     final bgBottom = isDark ? const Color(0xFF0B1020) : const Color(0xFFEFF4FF);
+
+    const pages = <_OnboardingData>[
+      _OnboardingData(
+        imagePath: 'assets/images/onboarding1.png',
+        titleKey: 'onboarding_title_1',
+        subtitleKey: 'onboarding_subtitle_1',
+        accent: Color(0xFF2B6DFF),
+      ),
+      _OnboardingData(
+        imagePath: 'assets/images/onboarding2.png',
+        titleKey: 'onboarding_title_2',
+        subtitleKey: 'onboarding_subtitle_2',
+        accent: Color(0xFF6E56FF),
+      ),
+      _OnboardingData(
+        imagePath: 'assets/images/onboarding3.png',
+        titleKey: 'onboarding_title_3',
+        subtitleKey: 'onboarding_subtitle_3',
+        accent: Color(0xFF18A0FB),
+      ),
+    ];
+
+    final safeIndex = _index.clamp(0, pages.length - 1);
 
     return Scaffold(
       body: Container(
@@ -95,23 +99,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             child: Column(
               children: [
-                // Top bar (Back / Skip)
                 Row(
                   children: [
-                    _TopIconButton(
-                      icon: Icons.arrow_back_rounded,
-                      onTap: () {
-                        if (_index == 0) {
-                          Navigator.pop(context);
-                        } else {
-                          _controller.previousPage(
-                            duration: const Duration(milliseconds: 320),
-                            curve: Curves.easeOutCubic,
-                          );
-                        }
-                      },
-                    ),
-                    const Spacer(),
                     TextButton(
                       onPressed: _onSkip,
                       style: TextButton.styleFrom(
@@ -125,64 +114,59 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text('Skip'),
+                      child: Text(context.tr('skip')),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      tooltip: context.tr('language'),
+                      icon: const Icon(Icons.language),
+                      onPressed: () => context.read<LocaleNotifier>().toggle(),
                     ),
                   ],
                 ),
-
                 SizedBox(height: SizeConfig.blockHeight * 1.5),
-
-                // Pages
                 Expanded(
                   child: PageView.builder(
                     controller: _controller,
-                    itemCount: _pages.length,
+                    itemCount: pages.length,
                     onPageChanged: (i) => setState(() => _index = i),
                     physics: const BouncingScrollPhysics(),
-                    itemBuilder: (_, i) => OnboardingCard(data: _pages[i]),
+                    itemBuilder: (_, i) => OnboardingCard(data: pages[i]),
                   ),
                 ),
-
                 SizedBox(height: SizeConfig.blockHeight * 2),
-
-                // Indicator
                 SmoothPageIndicator(
                   controller: _controller,
-                  count: _pages.length,
+                  count: pages.length,
                   effect: ExpandingDotsEffect(
                     dotHeight: 8,
                     dotWidth: 8,
                     expansionFactor: 3,
-                    activeDotColor: _pages[_index].accent,
+                    activeDotColor: pages[safeIndex].accent,
                     dotColor: theme.dividerColor.withOpacity(0.35),
                   ),
                 ),
-
                 SizedBox(height: SizeConfig.blockHeight * 3),
-
-                // Bottom CTA
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 54,
-                        child: ElevatedButton(
-                          onPressed: _onNext,
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            backgroundColor: _pages[_index].accent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Text(_isLast ? 'Get Started' : 'Next'),
-                        ),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: () => _onNext(pages.length),
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: pages[safeIndex].accent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                  ],
+                    child: Text(
+                      safeIndex == pages.length - 1
+                          ? context.tr('get_started')
+                          : context.tr('next'),
+                    ),
+                  ),
                 ),
-
                 SizedBox(height: SizeConfig.blockHeight * 1.2),
               ],
             ),
@@ -208,7 +192,6 @@ class OnboardingCard extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Hero image with soft glow (بدون مربع)
         Stack(
           alignment: Alignment.center,
           children: [
@@ -235,24 +218,20 @@ class OnboardingCard extends StatelessWidget {
             ),
           ],
         ),
-
         SizedBox(height: SizeConfig.blockHeight * 4),
-
         Text(
-          data.title,
+          context.tr(data.titleKey),
           textAlign: TextAlign.center,
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
             letterSpacing: -0.2,
           ),
         ),
-
         SizedBox(height: SizeConfig.blockHeight * 1.6),
-
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
           child: Text(
-            data.subtitle,
+            context.tr(data.subtitleKey),
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge?.copyWith(
               height: 1.5,
@@ -265,45 +244,16 @@ class OnboardingCard extends StatelessWidget {
   }
 }
 
-class _TopIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _TopIconButton({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Material(
-      color: theme.colorScheme.surface.withOpacity(0.0),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            color: theme.colorScheme.surface.withOpacity(0.30),
-            border: Border.all(color: theme.dividerColor.withOpacity(0.18)),
-          ),
-          child: Icon(icon, size: 22),
-        ),
-      ),
-    );
-  }
-}
-
 class _OnboardingData {
   final String imagePath;
-  final String title;
-  final String subtitle;
+  final String titleKey;
+  final String subtitleKey;
   final Color accent;
 
   const _OnboardingData({
     required this.imagePath,
-    required this.title,
-    required this.subtitle,
+    required this.titleKey,
+    required this.subtitleKey,
     required this.accent,
   });
 }

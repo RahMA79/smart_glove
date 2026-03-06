@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/app_text_field.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
+import 'package:smart_glove/features/doctor/presentation/widgets/doctor_bottom_nav.dart';
+import 'doctor_home_screen.dart';
+import 'new_patient_request_screen.dart';
+import 'settings_screen.dart';
 import '../widgets/labeled_slider.dart';
 import 'package:smart_glove/features/doctor/data/models/therapy_program_model.dart';
 
@@ -26,6 +31,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
   bool _saving = false;
 
   String? _doctorId;
+  int _navIndex = 1;
 
   @override
   void initState() {
@@ -46,13 +52,13 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
     final textTheme = theme.textTheme;
 
     if (_doctorId == null) {
-      return const Scaffold(
-        body: Center(child: Text("No logged-in doctor. Please login again.")),
+      return Scaffold(
+        body: Center(child: Text(context.tr('no_logged_in_doctor'))),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Program')),
+      appBar: AppBar(title: Text(context.tr('create_program'))),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: SizeConfig.blockWidth * 4,
@@ -62,14 +68,14 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppTextField(
-              label: 'Program Name',
-              hint: 'Enter program name',
+              label: context.tr('program_name'),
+              hint: context.tr('enter_program_name'),
               controller: _programNameController,
             ),
             SizedBox(height: SizeConfig.blockHeight * 2),
 
             Text(
-              'Type of Injury',
+              context.tr('type_of_injury'),
               style: textTheme.titleMedium?.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -79,16 +85,22 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
 
             DropdownButtonFormField<String>(
               initialValue: _selectedInjuryType,
-              items: const [
-                DropdownMenuItem(value: 'Stroke', child: Text('Stroke')),
+              items: [
+                DropdownMenuItem(
+                  value: 'Stroke',
+                  child: Text(context.tr('injury_stroke')),
+                ),
                 DropdownMenuItem(
                   value: 'Tendon Repair',
-                  child: Text('Tendon Repair'),
+                  child: Text(context.tr('injury_tendon_repair')),
                 ),
-                DropdownMenuItem(value: 'Burn', child: Text('Burn')),
+                DropdownMenuItem(
+                  value: 'Burn',
+                  child: Text(context.tr('injury_burn')),
+                ),
                 DropdownMenuItem(
                   value: 'Nerve Injury',
-                  child: Text('Nerve Injury'),
+                  child: Text(context.tr('injury_nerve_injury')),
                 ),
               ],
               onChanged: _saving
@@ -113,7 +125,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             SizedBox(height: SizeConfig.blockHeight * 3),
 
             Text(
-              'Session Settings',
+              context.tr('session_settings'),
               style: textTheme.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -122,12 +134,12 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             SizedBox(height: SizeConfig.blockHeight * 1.5),
 
             LabeledSlider(
-              title: 'Session Duration',
+              title: context.tr('session_duration'),
               value: _sessionDuration,
               min: 10,
               max: 60,
               divisions: 5,
-              unit: 'min',
+              unit: context.tr('minutes_unit'),
               onChanged: _saving
                   ? (_) {}
                   : (v) => setState(() => _sessionDuration = v),
@@ -136,7 +148,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             SizedBox(height: SizeConfig.blockHeight * 2),
 
             Text(
-              'Finger Angles & Assistance',
+              context.tr('finger_angles_and_assistance'),
               style: textTheme.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -145,12 +157,12 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             SizedBox(height: SizeConfig.blockHeight * 1.5),
 
             LabeledSlider(
-              title: 'Target Finger Flexion',
+              title: context.tr('target_finger_flexion'),
               value: _fingerAngle,
               min: 0,
               max: 90,
               divisions: 9,
-              unit: '°',
+              unit: context.tr('degree_unit'),
               onChanged: _saving
                   ? (_) {}
                   : (v) => setState(() => _fingerAngle = v),
@@ -159,7 +171,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             SizedBox(height: SizeConfig.blockHeight * 1.5),
 
             LabeledSlider(
-              title: 'Motor Assistance Level',
+              title: context.tr('motor_assistance_level'),
               value: _motorAssist,
               min: 0,
               max: 100,
@@ -173,7 +185,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             SizedBox(height: SizeConfig.blockHeight * 3),
 
             Text(
-              'EMG Threshold',
+              context.tr('emg_threshold'),
               style: textTheme.titleMedium?.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -182,7 +194,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             SizedBox(height: SizeConfig.blockHeight * 1.5),
 
             LabeledSlider(
-              title: 'EMG Activation Threshold',
+              title: context.tr('emg_activation_threshold'),
               value: _emgThreshold,
               min: 0,
               max: 100,
@@ -196,7 +208,9 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             SizedBox(height: SizeConfig.blockHeight * 4),
 
             PrimaryButton(
-              text: _saving ? 'Saving...' : 'Create Program',
+              text: _saving
+                  ? context.tr('saving')
+                  : context.tr('create_program'),
               onPressed: () {
                 if (!_saving) _onCreatePressed();
               },
@@ -204,22 +218,53 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: DoctorBottomNav(
+        currentIndex: _navIndex,
+        onChanged: (index) {
+          if (index == _navIndex) return;
+          setState(() => _navIndex = index);
+
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const DoctorHomeScreen()),
+            );
+          }
+
+          if (index == 2) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const NewPatientRequestScreen(),
+              ),
+            );
+          }
+
+          if (index == 3) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
+          }
+        },
+      ),
     );
   }
 
   Future<void> _onCreatePressed() async {
     final name = _programNameController.text.trim();
+
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter program name")),
+        SnackBar(content: Text(context.tr('please_enter_program_name'))),
       );
       return;
     }
 
     if (_doctorId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("No logged-in doctor.")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('no_logged_in_doctor_short'))),
+      );
       return;
     }
 
@@ -260,9 +305,13 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
       Navigator.pop(context, created);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed to create program: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr('failed_to_create_program', params: {'error': '$e'}),
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }

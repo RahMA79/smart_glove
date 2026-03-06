@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class DoctorProfileHeader extends StatelessWidget {
   const DoctorProfileHeader({super.key});
@@ -27,7 +28,7 @@ class DoctorProfileHeader extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Hand Rehabilitation Specialist',
+              context.tr('hand_rehab_specialist'),
               style: textTheme.bodySmall?.copyWith(fontSize: 13),
             ),
           ],

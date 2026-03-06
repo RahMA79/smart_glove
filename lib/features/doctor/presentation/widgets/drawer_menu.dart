@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_glove/features/auth/presentation/widgets/logout_function.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/doctor_home_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/doctor_notifications_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/my_patients_screen.dart';
@@ -37,7 +38,7 @@ class DoctorDrawer extends StatelessWidget {
             ),
           ),
 
-          _drawerItem(context, Icons.home, 'Home', () {
+          _drawerItem(context, Icons.home, context.tr('Home'), () {
             Navigator.pop(context);
             Navigator.push(
               context,
@@ -45,7 +46,7 @@ class DoctorDrawer extends StatelessWidget {
             );
           }),
 
-          _drawerItem(context, Icons.people, 'My Patients', () {
+          _drawerItem(context, Icons.people, context.tr('My Patients'), () {
             Navigator.pop(context);
             Navigator.push(
               context,
@@ -53,7 +54,7 @@ class DoctorDrawer extends StatelessWidget {
             );
           }),
 
-          _drawerItem(context, Icons.person_add, 'New Patient Requests', () {
+          _drawerItem(context, Icons.person_add, context.tr('New patient requests'), () {
             Navigator.pop(context);
             Navigator.push(
               context,
@@ -63,7 +64,7 @@ class DoctorDrawer extends StatelessWidget {
             );
           }),
 
-          _drawerItem(context, Icons.notifications, 'Notifications', () {
+          _drawerItem(context, Icons.notifications, context.tr('Notifications'), () {
             Navigator.pop(context);
             Navigator.push(
               context,
@@ -73,7 +74,7 @@ class DoctorDrawer extends StatelessWidget {
             );
           }),
 
-          _drawerItem(context, Icons.settings, 'Settings', () {
+          _drawerItem(context, Icons.settings, context.tr('Settings'), () {
             Navigator.pop(context);
             Navigator.push(
               context,
@@ -83,7 +84,7 @@ class DoctorDrawer extends StatelessWidget {
 
           const Spacer(),
 
-          _drawerItem(context, Icons.logout, 'Logout', () async {
+          _drawerItem(context, Icons.logout, context.tr('Logout'), () async {
             await LogoutFunction.logout(context);
           }),
         ],

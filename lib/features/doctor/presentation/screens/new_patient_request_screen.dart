@@ -5,6 +5,11 @@ import 'package:smart_glove/features/doctor/presentation/widgets/drawer_menu.dar
 import '../../data/models/patient_request_model.dart';
 import '../widgets/notifications_patient_card.dart';
 import '../widgets/patient_request_card.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
+import 'package:smart_glove/features/doctor/presentation/widgets/doctor_bottom_nav.dart';
+import 'doctor_home_screen.dart';
+import 'create_program_screen.dart';
+import 'settings_screen.dart';
 
 class NewPatientRequestScreen extends StatefulWidget {
   const NewPatientRequestScreen({super.key});
@@ -17,6 +22,7 @@ class NewPatientRequestScreen extends StatefulWidget {
 class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
   // ✅ UID بتاع الدكتور من FirebaseAuth
   String? _doctorId;
+  int _navIndex = 2;
 
   @override
   void initState() {
@@ -32,9 +38,13 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
     try {
       if (_doctorId == null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("No logged-in doctor.")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.tr('No logged-in doctor. Please login again.'),
+            ),
+          ),
+        );
         return;
       }
 
@@ -66,19 +76,20 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
           'createdAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
 
-        // ✅ حذف الريكوست بعد القبول
         tx.delete(requestRef);
       });
 
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Request accepted")));
+      ).showSnackBar(SnackBar(content: Text(context.tr('Request accepted'))));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('Failed: {error}', params: {'error': '$e'})),
+        ),
+      );
     }
   }
 
@@ -86,9 +97,13 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
     try {
       if (_doctorId == null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("No logged-in doctor.")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.tr('No logged-in doctor. Please login again.'),
+            ),
+          ),
+        );
         return;
       }
 
@@ -102,12 +117,14 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Request rejected")));
+      ).showSnackBar(SnackBar(content: Text(context.tr('Request rejected'))));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('Failed: {error}', params: {'error': '$e'})),
+        ),
+      );
     }
   }
 
@@ -116,8 +133,10 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
     final theme = Theme.of(context);
 
     if (_doctorId == null) {
-      return const Scaffold(
-        body: Center(child: Text("No logged-in doctor. Please login again.")),
+      return Scaffold(
+        body: Center(
+          child: Text(context.tr('No logged-in doctor. Please login again.')),
+        ),
       );
     }
 
@@ -125,7 +144,7 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       drawer: const DoctorDrawer(),
       appBar: AppBar(
-        title: const Text("New Patient Request"),
+        title: Text(context.tr('New Patient Request')),
         centerTitle: true,
         actions: [
           Padding(
@@ -153,7 +172,14 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
-                return Center(child: Text("Error: ${snapshot.error}"));
+                return Center(
+                  child: Text(
+                    context.tr(
+                      'Failed: {error}',
+                      params: {'error': '${snapshot.error}'},
+                    ),
+                  ),
+                );
               }
 
               final allDocs = snapshot.data?.docs ?? [];
@@ -166,9 +192,9 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
 
               if (docs.isEmpty) {
                 return ListView(
-                  children: const [
+                  children: [
                     SizedBox(height: 60),
-                    Center(child: Text("No new requests.")),
+                    Center(child: Text(context.tr('No new requests.'))),
                   ],
                 );
               }
@@ -225,6 +251,32 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
             },
           ),
         ),
+      ),
+      bottomNavigationBar: DoctorBottomNav(
+        currentIndex: _navIndex,
+        onChanged: (index) {
+          if (index == _navIndex) return;
+          setState(() => _navIndex = index);
+
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const DoctorHomeScreen()),
+            );
+          }
+          if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const CreateProgramScreen()),
+            );
+          }
+          if (index == 3) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
+          }
+        },
       ),
     );
   }

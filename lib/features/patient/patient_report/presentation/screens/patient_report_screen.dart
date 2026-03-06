@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/app_colors.dart';
 import '../../data/models/patient_report_model.dart';
 import '../widgets/download_button.dart';
 import '../widgets/report_expand_row.dart';
 import '../widgets/report_summary_card.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class PatientReportScreen extends StatelessWidget {
   final PatientReportModel report;
@@ -12,18 +12,21 @@ class PatientReportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final colorScheme = theme.colorScheme;
+
+    final bg = colorScheme.surface;
+    final dividerColor = colorScheme.onSurface.withOpacity(0.10);
+    final mutedText = colorScheme.onSurface.withOpacity(0.70);
 
     return Scaffold(
-      backgroundColor: AppColors.background, // matches your AppColors
+      backgroundColor: bg,
       appBar: AppBar(
-        title: const Text("Patient Report"),
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            // TODO: open drawer/menu
-          },
-        ),
+        backgroundColor: bg,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(context.tr('patient_report')),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
@@ -46,35 +49,41 @@ class PatientReportScreen extends StatelessWidget {
               const SizedBox(height: 18),
 
               ReportExpandRow(
-                title: "Excel Patients",
+                title: context.tr('excel_patients'),
                 onTap: () {
                   // TODO
                 },
               ),
-              Divider(height: 1, color: Colors.black.withOpacity(0.08)),
+              Divider(height: 1, color: dividerColor),
 
               ReportExpandRow(
-                title: "session Accuracy",
+                title: context.tr('session_accuracy'),
                 trailingText: report.accuracyLabel,
                 onTap: () {},
               ),
-              Divider(height: 1, color: Colors.black.withOpacity(0.08)),
+              Divider(height: 1, color: dividerColor),
 
               ReportExpandRow(
-                title: "progress rate",
+                title: context.tr('progress_rate'),
                 trailingText: report.progressLabel,
                 onTap: () {},
               ),
-              Divider(height: 1, color: Colors.black.withOpacity(0.08)),
+              Divider(height: 1, color: dividerColor),
 
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text("patient Level", style: textTheme.bodyMedium),
+                      child: Text(
+                        context.tr('patient_level'),
+                        style: textTheme.bodyMedium?.copyWith(color: mutedText),
+                      ),
                     ),
-                    Text(report.patientLevel, style: textTheme.bodySmall),
+                    Text(
+                      report.patientLevel,
+                      style: textTheme.bodySmall?.copyWith(color: mutedText),
+                    ),
                   ],
                 ),
               ),
@@ -86,7 +95,11 @@ class PatientReportScreen extends StatelessWidget {
                 child: DownloadButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Downloading...")),
+                      SnackBar(
+                        content: Text(context.tr('downloading')),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: colorScheme.inverseSurface,
+                      ),
                     );
                   },
                 ),

@@ -23,6 +23,8 @@ class _PatientOverviewScreenState extends State<PatientOverviewScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context).languageCode;
+    final isArabic = locale == 'ar';
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -33,8 +35,10 @@ class _PatientOverviewScreenState extends State<PatientOverviewScreen> {
           children: [
             PatientActionCard(
               icon: Icons.assignment_turned_in_outlined,
-              title: "Assign Therapy Program",
-              subtitle: "Create or assign a program for this patient",
+              title: isArabic ? "تعيين برنامج علاجي" : "Assign Therapy Program",
+              subtitle: isArabic
+                  ? "إنشاء أو تعيين برنامج لهذا المريض"
+                  : "Create or assign a program for this patient",
               onTap: () {
                 Navigator.push(
                   context,
@@ -51,8 +55,10 @@ class _PatientOverviewScreenState extends State<PatientOverviewScreen> {
             const SizedBox(height: 16),
             PatientActionCard(
               icon: Icons.show_chart,
-              title: "View Progress",
-              subtitle: "EMG data, finger angles & progress",
+              title: isArabic ? "عرض التقدم" : "View Progress",
+              subtitle: isArabic
+                  ? "بيانات EMG، زوايا الأصابع والتقدم"
+                  : "EMG data, finger angles & progress",
               onTap: () {
                 Navigator.push(
                   context,

@@ -43,9 +43,12 @@ dependencies:
   fl_chart: ^0.69.0
   image_picker: ^1.0.7
   path_provider: ^2.1.2
+  flutter_localizations:
+    sdk: flutter
 
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.13.1
   flutter_test:
     sdk: flutter
 
@@ -58,9 +61,13 @@ dev_dependencies:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
-
+flutter_launcher_icons:
+    android: true
+    ios: false
+    image_path: "assets/images/iconapp.png"
 # The following section is specific to Flutter packages.
 flutter:
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

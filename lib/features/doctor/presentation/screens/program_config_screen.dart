@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
 import '../../presentation/widgets/labeled_slider.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class ProgramConfigScreen extends StatefulWidget {
   final String programId;
@@ -102,8 +103,8 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
         : cs.onSurface.withOpacity(0.70);
 
     if (_doctorId == null) {
-      return const Scaffold(
-        body: Center(child: Text("No logged-in doctor. Please login again.")),
+      return Scaffold(
+        body: Center(child: Text(context.tr('no_logged_in_doctor'))),
       );
     }
 
@@ -147,7 +148,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Session Settings',
+                    context.tr('session_settings'),
                     style: textTheme.titleMedium?.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -157,12 +158,12 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                   SizedBox(height: SizeConfig.blockHeight * 1.5),
 
                   LabeledSlider(
-                    title: 'Session Duration',
+                    title: context.tr('session_duration'),
                     value: _sessionDurationMin,
                     min: 10,
                     max: 60,
                     divisions: 5,
-                    unit: 'min',
+                    unit: context.tr('minutes_unit'),
                     onChanged: disabled
                         ? (_) {}
                         : (v) => setState(() => _sessionDurationMin = v),
@@ -171,7 +172,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                   SizedBox(height: SizeConfig.blockHeight * 2),
 
                   Text(
-                    'Finger Angles & Assistance',
+                    context.tr('finger_angles_and_assistance'),
                     style: textTheme.titleMedium?.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -181,12 +182,12 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                   SizedBox(height: SizeConfig.blockHeight * 1.5),
 
                   LabeledSlider(
-                    title: 'Target Finger Flexion',
+                    title: context.tr('target_finger_flexion'),
                     value: _targetFingerFlexionDeg,
                     min: 0,
                     max: 90,
                     divisions: 9,
-                    unit: '°',
+                    unit: context.tr('degree_unit'),
                     onChanged: disabled
                         ? (_) {}
                         : (v) => setState(() => _targetFingerFlexionDeg = v),
@@ -195,7 +196,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                   SizedBox(height: SizeConfig.blockHeight * 1.5),
 
                   LabeledSlider(
-                    title: 'Motor Assistance Level',
+                    title: context.tr('motor_assistance_level'),
                     value: _motorAssistancePercent,
                     min: 0,
                     max: 100,
@@ -209,7 +210,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                   SizedBox(height: SizeConfig.blockHeight * 3),
 
                   Text(
-                    'EMG Threshold',
+                    context.tr('emg_threshold'),
                     style: textTheme.titleMedium?.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -219,7 +220,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                   SizedBox(height: SizeConfig.blockHeight * 1.5),
 
                   LabeledSlider(
-                    title: 'EMG Activation Threshold',
+                    title: context.tr('emg_activation_threshold'),
                     value: _emgActivationThresholdPercentMvc,
                     min: 0,
                     max: 100,
@@ -235,7 +236,9 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                   SizedBox(height: SizeConfig.blockHeight * 4),
 
                   PrimaryButton(
-                    text: _saving ? 'Saving...' : 'Save Changes',
+                    text: _saving
+                        ? context.tr('saving')
+                        : context.tr('save_changes'),
                     onPressed: () {
                       if (disabled) return;
                       _onSavePressed();
@@ -266,15 +269,17 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
           });
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Program settings saved')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('program_settings_saved'))),
+      );
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('failed_to_save', params: {'error': '$e'})),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -289,22 +294,25 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: cs.surface,
         title: Text(
-          'Delete Program',
+          context.tr('delete_program'),
           style: TextStyle(fontWeight: FontWeight.w700, color: cs.onSurface),
         ),
         content: Text(
-          'Are you sure you want to permanently delete this program?\nThis action cannot be undone.',
+          context.tr('delete_program_confirm'),
           style: TextStyle(color: cs.onSurface.withOpacity(0.85)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel', style: TextStyle(color: cs.primary)),
+            child: Text(
+              context.tr('cancel'),
+              style: TextStyle(color: cs.primary),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: cs.error),
-            child: const Text('Delete'),
+            child: Text(context.tr('delete')),
           ),
         ],
       ),
@@ -329,13 +337,17 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Program deleted')));
+      ).showSnackBar(SnackBar(content: Text(context.tr('program_deleted'))));
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr('failed_to_delete', params: {'error': '$e'}),
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _deleting = false);
     }

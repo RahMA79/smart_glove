@@ -7,15 +7,25 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_notifier.dart';
 import 'core/theme/theme_local_data_source.dart';
 import 'core/theme/theme_repository.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'core/localization/app_localizations.dart';
+import 'core/localization/locale_notifier.dart';
 
 void main() async {
   final themeLocalDataSource = ThemeLocalDataSource();
   final themeRepository = ThemeRepository(themeLocalDataSource);
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  final localeNotifier = LocaleNotifier();
+  await localeNotifier.load();
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeNotifier(themeRepository),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeNotifier(themeRepository)),
+        ChangeNotifierProvider(create: (_) => localeNotifier),
+      ],
       child: const MyApp(),
     ),
   );
@@ -27,8 +37,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final localeNotifier = Provider.of<LocaleNotifier>(context);
 
-    if (!themeNotifier.isLoaded) {
+    if (!themeNotifier.isLoaded || !localeNotifier.isLoaded) {
       return const MaterialApp(
         home: Scaffold(body: Center(child: CircularProgressIndicator())),
       );
@@ -40,6 +51,15 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeNotifier.themeMode,
+
+      locale: localeNotifier.locale,
+      supportedLocales: AppLocalizations.supported,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
 
       home: SplashScreen(),
     );

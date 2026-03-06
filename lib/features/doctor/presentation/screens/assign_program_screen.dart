@@ -7,6 +7,7 @@ import 'package:smart_glove/features/doctor/data/models/therapy_program_model.da
 import '../widgets/patient_header_card.dart';
 import '../widgets/program_select_card.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/create_program_screen.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class AssignProgramScreen extends StatefulWidget {
   final String patientId;
@@ -48,14 +49,17 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
     final canAssign = _selectedProgramId != null && !_assigning;
 
     if (_doctorId == null) {
-      return const Scaffold(
-        body: Center(child: Text("No logged-in doctor. Please login again.")),
+      return Scaffold(
+        body: Center(child: Text(context.tr('no_logged_in_doctor'))),
       );
     }
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(title: const Text("Assign Program"), centerTitle: true),
+      appBar: AppBar(
+        title: Text(context.tr('assign_program')),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: SizeConfig.blockWidth * 4,
@@ -68,11 +72,12 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
               condition: widget.condition,
             ),
             SizedBox(height: SizeConfig.blockHeight * 2),
+
             Row(
               children: [
                 Expanded(
                   child: Text(
-                    "Select a program",
+                    context.tr('select_program'),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -82,7 +87,7 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
                 TextButton(
                   onPressed: _assigning ? null : _openCreateProgram,
                   child: Text(
-                    "Create New",
+                    context.tr('create_new'),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w700,
@@ -105,13 +110,21 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
+
                   if (snapshot.hasError) {
-                    return Center(child: Text("Error: ${snapshot.error}"));
+                    return Center(
+                      child: Text(
+                        context.tr(
+                          'error_with_details',
+                          params: {'error': '${snapshot.error}'},
+                        ),
+                      ),
+                    );
                   }
 
                   final docs = snapshot.data?.docs ?? [];
                   if (docs.isEmpty) {
-                    return const Center(child: Text("No programs yet."));
+                    return Center(child: Text(context.tr('no_programs_yet')));
                   }
 
                   final programs = docs.map((d) {
@@ -142,9 +155,12 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
                   final stillExists = programs.any(
                     (p) => p.id == _selectedProgramId,
                   );
+
                   if (_selectedProgramId != null && !stillExists) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted) setState(() => _selectedProgramId = null);
+                      if (mounted) {
+                        setState(() => _selectedProgramId = null);
+                      }
                     });
                   }
 
@@ -170,7 +186,9 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
             SizedBox(height: SizeConfig.blockHeight * 2),
 
             PrimaryButton(
-              text: _assigning ? "Assigning..." : "Assign Program",
+              text: _assigning
+                  ? context.tr('assigning')
+                  : context.tr('assign_program_button'),
               onPressed: () {
                 if (canAssign) _onAssignPressed();
               },
@@ -193,7 +211,7 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Program created and selected")),
+      SnackBar(content: Text(context.tr('program_created_selected'))),
     );
   }
 
@@ -220,9 +238,7 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
       await db.runTransaction((tx) async {
         final newProgSnap = await tx.get(newProgramRef);
         if (!newProgSnap.exists) {
-          throw Exception(
-            "Selected program not found. Please refresh and select an existing program.",
-          );
+          throw Exception(context.tr('selected_program_not_found'));
         }
 
         final patientSnap = await tx.get(patientRef);
@@ -266,14 +282,18 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Program assigned successfully")),
+        SnackBar(content: Text(context.tr('program_assigned_successfully'))),
       );
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Failed to assign: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr('failed_to_assign', params: {'error': '$e'}),
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _assigning = false);
     }

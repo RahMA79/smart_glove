@@ -10,6 +10,7 @@ import 'package:smart_glove/features/patient/presentation/widgets/patient_progra
 import 'package:smart_glove/features/patient/presentation/widgets/patient_bottom_nav.dart';
 import 'package:smart_glove/features/patient/reqestscreen.dart';
 import 'package:smart_glove/features/patient/session/presentation/screens/session_details_screen.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 import '../widgets/patient_drawer.dart';
 import '../widgets/get_patient_name.dart';
@@ -40,7 +41,8 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   Future<void> _loadName() async {
     final name = await getPatientName(widget.userId);
     if (!mounted) return;
-    setState(() => _patientName = name ?? 'Patient');
+    // Don't hardcode a fallback here because localization depends on context.
+    setState(() => _patientName = name ?? '');
   }
 
   Future<void> _loadProfileImage() async {
@@ -77,9 +79,16 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       setState(() => _profileImage = saved);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not open gallery: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.tr(
+              'Could not open gallery: {error}',
+              params: {'error': '$e'},
+            ),
+          ),
+        ),
+      );
     }
   }
 
@@ -89,9 +98,13 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
+    final displayName = _patientName.isEmpty
+        ? context.tr('Patient')
+        : _patientName;
+
     return Scaffold(
-      drawer: PatientDrawer(patientName: _patientName, userId: widget.userId),
-      appBar: AppBar(title: const Text('Home')),
+      drawer: PatientDrawer(patientName: displayName, userId: widget.userId),
+      appBar: AppBar(title: Text(context.tr('Home'))),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: SizeConfig.blockWidth * 4,
@@ -101,7 +114,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _PatientTopBar(
-              name: _patientName,
+              name: displayName,
               imageFile: _profileImage,
               onAvatarTap: _pickAndSaveProfileImage,
             ),
@@ -109,7 +122,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             SizedBox(height: SizeConfig.blockHeight * 3),
 
             Text(
-              'Your Therapy Programs',
+              context.tr('Your Therapy Programs'),
               style: textTheme.titleMedium?.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -118,16 +131,20 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             SizedBox(height: SizeConfig.blockHeight * 2),
 
             PatientProgramCard(
-              title: 'Burn Rehab',
-              subtitle: '3 sessions / week',
+              title: context.tr('Burn Rehab'),
+              subtitle: context.tr(
+                '{count} sessions / week',
+                params: {'count': '3'},
+              ),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const SessionDetailsScreen(
-                      sessionTitle: 'Session',
-                      description:
-                          "Designed to improve hand mobility by stimulating the flexor and extensor muscles.\nHelps restore nerve function and enhance activation.",
+                    builder: (_) => SessionDetailsScreen(
+                      sessionTitle: context.tr('Session'),
+                      description: context.tr(
+                        'Designed to improve hand mobility by stimulating the flexor and extensor muscles.\nHelps restore nerve function and enhance activation.',
+                      ),
                       durationMinutes: 1,
                     ),
                   ),
@@ -138,16 +155,20 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             SizedBox(height: SizeConfig.blockHeight * 1.5),
 
             PatientProgramCard(
-              title: 'Nerve Therapy',
-              subtitle: '4 sessions / week',
+              title: context.tr('Nerve Therapy'),
+              subtitle: context.tr(
+                '{count} sessions / week',
+                params: {'count': '4'},
+              ),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const SessionDetailsScreen(
-                      sessionTitle: 'Session',
-                      description:
-                          "Designed to improve hand mobility by stimulating the flexor and extensor muscles.\nHelps restore nerve function and enhance activation.",
+                    builder: (_) => SessionDetailsScreen(
+                      sessionTitle: context.tr('Session'),
+                      description: context.tr(
+                        'Designed to improve hand mobility by stimulating the flexor and extensor muscles.\nHelps restore nerve function and enhance activation.',
+                      ),
                       durationMinutes: 1,
                     ),
                   ),
@@ -168,21 +189,21 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const SessionDetailsScreen(
-                  sessionTitle: 'Session',
-                  description:
-                      "Designed to improve hand mobility by stimulating the flexor and extensor muscles.\nHelps restore nerve function and enhance activation.",
+                builder: (_) => SessionDetailsScreen(
+                  sessionTitle: context.tr('Session'),
+                  description: context.tr(
+                    'Designed to improve hand mobility by stimulating the flexor and extensor muscles.\nHelps restore nerve function and enhance activation.',
+                  ),
                   durationMinutes: 1,
                 ),
               ),
             );
           }
 
-
           if (index == 2) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => doctorrequest()),
+              MaterialPageRoute(builder: (_) => const DoctorRequestScreen()),
             );
           }
           if (index == 3) {
@@ -212,7 +233,7 @@ class _PatientTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
+    //final isDark = theme.brightness == Brightness.dark;
 
     return Row(
       children: [

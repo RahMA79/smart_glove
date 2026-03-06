@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_glove/features/patient/presentation/screens/patient_home_screen.dart';
 import '../../../doctor/presentation/screens/doctor_home_screen.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class RoleRoutes {
   static const doctor = "doctor";
@@ -57,6 +58,31 @@ Future<void> ensureUserProfile({
   }, SetOptions(merge: true));
 }
 
+Future<void> ensureRoleDoc({
+  required String uid,
+  required String email,
+  required String role,
+  String? name,
+}) async {
+  final fs = FirebaseFirestore.instance;
+  final safeName = (name ?? '').trim();
+  if (role == RoleRoutes.doctor) {
+    await fs.collection('doctors').doc(uid).set({
+      'uid': uid,
+      'email': email.trim().toLowerCase(),
+      'name': safeName.isEmpty ? 'Doctor' : safeName,
+      'createdAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  } else {
+    await fs.collection('patients').doc(uid).set({
+      'uid': uid,
+      'email': email.trim().toLowerCase(),
+      'name': safeName.isEmpty ? 'Patient' : safeName,
+      'createdAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+}
+
 Future<void> validate_email_password(
   BuildContext context,
   FirebaseAuth auth,
@@ -75,7 +101,7 @@ Future<void> validate_email_password(
     final user = cred.user;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login failed: user is null")),
+        SnackBar(content: Text(context.tr('Login failed: user is null'))),
       );
       return;
     }
@@ -87,6 +113,12 @@ Future<void> validate_email_password(
         : RoleRoutes.patient;
 
     await ensureUserProfile(uid: user.uid, email: user.email ?? email);
+    await ensureRoleDoc(
+      uid: user.uid,
+      email: user.email ?? email,
+      role: role,
+      name: user.displayName,
+    );
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool("isLoggedIn", true);
@@ -108,10 +140,18 @@ Future<void> validate_email_password(
   } on FirebaseAuthException catch (e) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(e.message ?? "Login failed")));
+    ).showSnackBar(
+      SnackBar(content: Text(e.message ?? context.tr('Login failed'))),
+    );
   } catch (e) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text("Unexpected error: $e")));
+    ).showSnackBar(
+      SnackBar(
+        content: Text(
+          context.tr('Unexpected error: {error}', params: {'error': '$e'}),
+        ),
+      ),
+    );
   }
 }

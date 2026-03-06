@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
+
 import '../../data/models/doctor_notification_model.dart';
 import '../widgets/notification_filter_tabs.dart';
 import '../widgets/notification_tile.dart';
@@ -16,32 +18,53 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
   int _filterIndex = 0; // 0 all, 1 unread
 
   // TODO: replace with API
-  final List<DoctorNotificationModel> _all = [
-    DoctorNotificationModel(
-      id: "n1",
-      type: DoctorNotificationType.newPatientRequest,
-      title: "New Patient Request",
-      subtitle: "John Smith requested to join your care program.",
-      createdAt: DateTime.now().subtract(const Duration(minutes: 3)),
-      isRead: false,
-    ),
-    DoctorNotificationModel(
-      id: "n2",
-      type: DoctorNotificationType.reportReady,
-      title: "Report Ready",
-      subtitle: "Emily Wilson session report is ready to download.",
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      isRead: true,
-    ),
-    DoctorNotificationModel(
-      id: "n3",
-      type: DoctorNotificationType.sessionCompleted,
-      title: "Session Completed",
-      subtitle: "Mark Smith completed today’s therapy session.",
-      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-      isRead: false,
-    ),
-  ];
+  late List<DoctorNotificationModel> _all;
+
+  @override
+  void initState() {
+    super.initState();
+    _all = [
+      DoctorNotificationModel(
+        id: "n1",
+        type: DoctorNotificationType.newPatientRequest,
+        title: 'new_patient_request',
+        subtitle: 'patient_join_request_demo',
+        createdAt: DateTime.now().subtract(const Duration(minutes: 3)),
+        isRead: false,
+      ),
+      DoctorNotificationModel(
+        id: "n2",
+        type: DoctorNotificationType.reportReady,
+        title: 'report_ready',
+        subtitle: 'session_report_ready_demo',
+        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+        isRead: true,
+      ),
+      DoctorNotificationModel(
+        id: "n3",
+        type: DoctorNotificationType.sessionCompleted,
+        title: 'session_completed',
+        subtitle: 'therapy_session_completed_demo',
+        createdAt: DateTime.now().subtract(const Duration(hours: 5)),
+        isRead: false,
+      ),
+    ];
+  }
+
+  void _markAllAsRead() {
+    setState(() {
+      for (var i = 0; i < _all.length; i++) {
+        _all[i] = DoctorNotificationModel(
+          id: _all[i].id,
+          type: _all[i].type,
+          title: _all[i].title,
+          subtitle: _all[i].subtitle,
+          createdAt: _all[i].createdAt,
+          isRead: true,
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +78,7 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Notifications"),
+        title: Text(context.tr("Notifications")),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -63,25 +86,13 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              // mark all as read (local)
-              setState(() {
-                for (var i = 0; i < _all.length; i++) {
-                  _all[i] = DoctorNotificationModel(
-                    id: _all[i].id,
-                    type: _all[i].type,
-                    title: _all[i].title,
-                    subtitle: _all[i].subtitle,
-                    createdAt: _all[i].createdAt,
-                    isRead: true,
-                  );
-                }
-              });
-            },
+            onPressed: _all.isEmpty ? null : _markAllAsRead,
             child: Text(
-              "Mark all",
+              context.tr("Mark all"),
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.primary,
+                color: _all.isEmpty
+                    ? theme.disabledColor
+                    : theme.colorScheme.primary,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -100,10 +111,9 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
               onChanged: (i) => setState(() => _filterIndex = i),
             ),
             SizedBox(height: SizeConfig.blockHeight * 2),
-
             Expanded(
               child: list.isEmpty
-                  ? _EmptyState()
+                  ? const _EmptyState()
                   : ListView.separated(
                       itemCount: list.length,
                       separatorBuilder: (_, __) =>
@@ -130,6 +140,8 @@ class _DoctorNotificationsScreenState extends State<DoctorNotificationsScreen> {
 }
 
 class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -143,7 +155,7 @@ class _EmptyState extends StatelessWidget {
           Icon(Icons.notifications_none, size: 46, color: muted),
           const SizedBox(height: 10),
           Text(
-            "No notifications",
+            context.tr("No notifications"),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
               color: onSurface,
@@ -151,7 +163,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            "You're all caught up.",
+            context.tr("You're all caught up."),
             style: theme.textTheme.bodySmall?.copyWith(color: muted),
           ),
         ],

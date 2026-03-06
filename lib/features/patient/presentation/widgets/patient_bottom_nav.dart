@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class PatientBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -30,7 +31,7 @@ class PatientBottomNav extends StatelessWidget {
       child: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: onTap,
-        elevation: 0,
+        elevation: 5,
         backgroundColor: theme.scaffoldBackgroundColor,
         type: BottomNavigationBarType.fixed,
 
@@ -44,26 +45,26 @@ class PatientBottomNav extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
 
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home_rounded),
-            label: "Home",
+            icon: const Icon(Icons.home_outlined),
+            activeIcon: const Icon(Icons.home_rounded),
+            label: context.tr('Home'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.timer_outlined),
-            activeIcon: Icon(Icons.timer_rounded),
-            label: "Sessions",
+            icon: const Icon(Icons.timer_outlined),
+            activeIcon: const Icon(Icons.timer_rounded),
+            label: context.tr('Sessions'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add),
-            activeIcon: Icon(Icons.add_rounded),
-            label: "Request doctor",
+            icon: const Icon(Icons.add),
+            activeIcon: const Icon(Icons.add_rounded),
+            label: context.tr('Request doctor'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings_rounded),
-            label: "Settings",
+            icon: const Icon(Icons.settings_outlined),
+            activeIcon: const Icon(Icons.settings_rounded),
+            label: context.tr('Settings'),
           ),
         ],
       ),

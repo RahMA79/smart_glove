@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models/patient_request_model.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class PatientRequestCard extends StatelessWidget {
   final PatientRequestModel request;
@@ -45,14 +46,14 @@ class PatientRequestCard extends StatelessWidget {
           Row(
             children: [
               _ActionButton(
-                label: "Accept",
+                label: context.tr('Accept'),
                 background: primary,
                 foreground: Colors.white,
                 onPressed: onAccept,
               ),
               const SizedBox(width: 14),
               _ActionButton(
-                label: "Reject",
+                label: context.tr('Reject'),
                 background: theme.colorScheme.surfaceVariant.withOpacity(0.6),
                 foreground: muted,
                 onPressed: onReject,

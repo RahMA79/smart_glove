@@ -15,6 +15,7 @@ class LogoutFunction {
     await prefs.remove('role');
     await prefs.remove('userId');
     await prefs.remove('userName');
+    await prefs.setBool('isLoggedIn', false);
 
     if (!context.mounted) return;
 

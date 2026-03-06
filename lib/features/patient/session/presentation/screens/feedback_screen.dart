@@ -3,6 +3,7 @@ import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
 import 'package:smart_glove/features/patient/patient_report/data/models/patient_report_model.dart';
 import 'package:smart_glove/features/patient/patient_report/presentation/screens/patient_report_screen.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
 
 class FeedbackScreen extends StatefulWidget {
   final String sessionTitle;
@@ -22,12 +23,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     super.initState();
 
     report = PatientReportModel(
-      conditionTitle: 'sesstion1',
+      conditionTitle: 'Session 1',
       duration: Duration(minutes: 1),
       exercisesDone: 1,
       painLevel: painRating,
       sessionAccuracy: 99,
-      patientLevel: 'simi',
+      patientLevel: 'Simi',
       progressRate: 99,
     );
   }
@@ -51,7 +52,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Feedback")),
+      appBar: AppBar(title: Text(context.tr('Feedback'))),
       body: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: SizeConfig.blockWidth * 5,
@@ -60,7 +61,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         child: Column(
           children: [
             Text(
-              "Session Completed",
+              context.tr('Session Completed'),
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -93,7 +94,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               child: Column(
                 children: [
                   Text(
-                    "How would you rate your pain?",
+                    context.tr('How would you rate your pain?'),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -104,7 +105,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   ),
                   SizedBox(height: SizeConfig.blockHeight * 5),
                   Text(
-                    "How easy was the session?",
+                    context.tr('How easy was the session?'),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -120,11 +121,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             SizedBox(height: SizeConfig.blockHeight * 4),
 
             PrimaryButton(
-              text: "Submit",
+              text: context.tr('Submit'),
               onPressed: () {
                 // TODO: save feedback to Firebase later
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Feedback submitted")),
+                  SnackBar(content: Text(context.tr('Feedback submitted'))),
                 );
                 Navigator.pushReplacement(
                   context,

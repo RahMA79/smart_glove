@@ -4,6 +4,9 @@ import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/app_text_field.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
 import 'package:smart_glove/sensor.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_glove/core/localization/app_localizations.dart';
+import 'package:smart_glove/core/localization/locale_notifier.dart';
 
 import '../widgets/login_function.dart';
 import 'register_screen.dart';
@@ -54,7 +57,16 @@ class _LoginScreenState extends State<LoginScreen> {
     SizeConfig.init(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(
+        title: Text(context.tr('Login')),
+        actions: [
+          IconButton(
+            tooltip: context.tr('Language'),
+            icon: const Icon(Icons.language),
+            onPressed: () => context.read<LocaleNotifier>().toggle(),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: SizeConfig.blockWidth * 5,
@@ -73,14 +85,15 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: SizeConfig.blockHeight * 4),
 
               AppTextField(
-                label: 'Email',
-                hint: 'Enter your email',
+                label: context.tr('Email'),
+                hint: context.tr('Enter your email'),
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 validator: (v) {
                   final value = v?.trim() ?? '';
-                  if (value.isEmpty) return 'Email is required';
-                  if (!value.contains('@')) return 'Enter a valid email';
+                  if (value.isEmpty) return context.tr('Email is required');
+                  if (!value.contains('@'))
+                    return context.tr('Enter a valid email');
                   return null;
                 },
               ),
@@ -88,15 +101,17 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: SizeConfig.blockHeight * 2),
 
               AppTextField(
-                label: 'Password',
-                hint: 'Enter your password',
+                label: context.tr('Password'),
+                hint: context.tr('Enter your password'),
                 controller: _passwordController,
                 keyboardType: TextInputType.visiblePassword,
                 obscureText: true,
                 validator: (v) {
                   final value = v ?? '';
-                  if (value.isEmpty) return 'Password is required';
-                  if (value.length < 6) return 'Min 6 characters';
+                  if (value.isEmpty)
+                    return context.tr('Password is required');
+                  if (value.length < 6)
+                    return context.tr('Min 6 characters');
                   return null;
                 },
               ),
@@ -104,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: SizeConfig.blockHeight * 3),
 
               PrimaryButton(
-                text: _loading ? 'Loading...' : 'Login',
+                text: _loading ? context.tr('Loading...') : context.tr('Login'),
                 onPressed: () {
                   if (!_loading) _onLoginPressed();
                 },
@@ -116,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Don't have an account?",
+                    context.tr("Don't have an account?"),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   TextButton(
@@ -128,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       );
                     },
-                    child: const Text('Sign up'),
+                    child: Text(context.tr('Sign up')),
                   ),
                 ],
               ),
@@ -142,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       );
                     },
-                    child: const Text('sensor screen'),
+                    child: Text(context.tr('sensor_screen')),
                   ),
             ],
           ),
