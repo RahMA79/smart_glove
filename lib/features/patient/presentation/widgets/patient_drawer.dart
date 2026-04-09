@@ -1,44 +1,22 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_glove/core/localization/app_localizations.dart';
+import 'package:smart_glove/core/widgets/avatar_widget.dart';
 import 'package:smart_glove/features/auth/presentation/widgets/logout_function.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/patient_progress_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/settings_screen.dart';
-import 'package:smart_glove/features/doctor/presentation/screens/doctor_notifications_screen.dart'; // ⚠️ مؤقتًا لو مفيش PatientNotifications
+import 'package:smart_glove/features/doctor/presentation/screens/doctor_notifications_screen.dart';
 
-class PatientDrawer extends StatefulWidget {
+class PatientDrawer extends StatelessWidget {
   final String patientName;
   final String userId;
+  final String? avatarUrl;
 
   const PatientDrawer({
     super.key,
     required this.patientName,
     required this.userId,
+    this.avatarUrl,
   });
-
-  @override
-  State<PatientDrawer> createState() => _PatientDrawerState();
-}
-
-class _PatientDrawerState extends State<PatientDrawer> {
-  File? _profileImage;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadProfileImage();
-  }
-
-  Future<void> _loadProfileImage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final path = prefs.getString('profile_image_path_${widget.userId}');
-    if (path != null && path.isNotEmpty && File(path).existsSync()) {
-      if (!mounted) return;
-      setState(() => _profileImage = File(path));
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,49 +31,50 @@ class _PatientDrawerState extends State<PatientDrawer> {
             decoration: BoxDecoration(color: theme.scaffoldBackgroundColor),
             child: Row(
               children: [
-                CircleAvatar(
+                AvatarWidget(
+                  imageUrl: avatarUrl,
+                  name: patientName,
                   radius: 30,
-                  backgroundColor: cs.primary.withOpacity(0.12),
-                  backgroundImage: _profileImage != null
-                      ? FileImage(_profileImage!)
-                      : null,
-                  child: _profileImage == null
-                      ? Icon(Icons.person_rounded, size: 30, color: cs.primary)
-                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    widget.patientName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        patientName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: cs.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Patient',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: cs.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
 
-          _drawerItem(
-            context,
-            Icons.home_outlined,
-            context.tr('drawer_home'),
-            () {
-              Navigator.pop(context);
-            },
-          ),
-
-          _drawerItem(
-            context,
-            Icons.person_outline,
-            context.tr('drawer_profile'),
-            () {
-              Navigator.pop(context);
-            },
-          ),
+          _drawerItem(context, Icons.home_outlined, context.tr('drawer_home'),
+              () => Navigator.pop(context)),
 
           _drawerItem(
             context,
@@ -107,58 +86,37 @@ class _PatientDrawerState extends State<PatientDrawer> {
                 context,
                 MaterialPageRoute(
                   builder: (_) =>
-                      PatientProgressScreen(patientName: widget.patientName),
+                      PatientProgressScreen(patientName: patientName),
                 ),
               );
             },
           ),
 
-          /// Notifications + Badge
           ListTile(
-            leading: Icon(
-              Icons.notifications_outlined,
-              color: theme.iconTheme.color,
-            ),
-            title: Text(
-              context.tr('drawer_notifications'),
-              style: theme.textTheme.bodyMedium,
-            ),
+            leading: Icon(Icons.notifications_outlined,
+                color: theme.iconTheme.color),
+            title: Text(context.tr('drawer_notifications'),
+                style: theme.textTheme.bodyMedium),
             trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
                 color: cs.error,
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: const Text(
-                '1',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: const Text('1',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold)),
             ),
             onTap: () {
               Navigator.pop(context);
-
-              // ✅ الأفضل: اعملي شاشة Notifications خاصة بالمريض
-              // لو مش موجودة عندك حاليًا، ده مؤقت:
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const DoctorNotificationsScreen(),
-                ),
+                    builder: (_) => const DoctorNotificationsScreen()),
               );
-            },
-          ),
-
-          _drawerItem(
-            context,
-            Icons.history,
-            context.tr('drawer_session_history'),
-            () {
-              Navigator.pop(context);
-              // TODO: افتحي Session History screen لو عندك
             },
           ),
 
@@ -181,10 +139,9 @@ class _PatientDrawerState extends State<PatientDrawer> {
             context,
             Icons.logout_rounded,
             context.tr('drawer_logout'),
-            () async {
-              await LogoutFunction.logout(context);
-            },
+            () async => await LogoutFunction.logout(context),
           ),
+          const SizedBox(height: 12),
         ],
       ),
     );
@@ -197,7 +154,6 @@ class _PatientDrawerState extends State<PatientDrawer> {
     VoidCallback onTap,
   ) {
     final theme = Theme.of(context);
-
     return ListTile(
       leading: Icon(icon, color: theme.iconTheme.color),
       title: Text(title, style: theme.textTheme.bodyMedium),

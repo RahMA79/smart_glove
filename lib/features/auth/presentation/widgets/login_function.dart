@@ -1,10 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_glove/features/patient/presentation/screens/patient_home_screen.dart';
 import '../../../doctor/presentation/screens/doctor_home_screen.dart';
-import 'package:smart_glove/core/localization/app_localizations.dart';
+import 'package:smart_glove/supabase_client.dart';
+import 'package:smart_glove/core/utils/auth_error_handler.dart';
 
 class RoleRoutes {
   static const doctor = "doctor";
@@ -22,40 +22,35 @@ bool isDoctorEmail(String email) {
   final e = email.trim().toLowerCase();
   final parts = e.split("@");
   if (parts.length != 2) return false;
-  final domain = parts[1];
-  return kDoctorDomains.contains(domain);
+  return kDoctorDomains.contains(parts[1]);
 }
 
-Future<String?> fetchRoleFromFirestore(String uid) async {
-  final fs = FirebaseFirestore.instance;
-
-  final userDoc = await fs.collection("users").doc(uid).get();
-  if (userDoc.exists) {
-    final role = userDoc.data()?["role"]?.toString();
-    if (role != null && role.isNotEmpty) return role;
-  }
-
-  return null;
+Future<String?> fetchRoleFromSupabase(String uid) async {
+  final response = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', uid)
+      .maybeSingle();
+  return response?['role']?.toString();
 }
 
 Future<void> ensureUserProfile({
   required String uid,
   required String email,
+  String? name,
+  int? age,
+  String? avatarUrl,
 }) async {
-  final fs = FirebaseFirestore.instance;
-  final ref = fs.collection("users").doc(uid);
-
-  final snap = await ref.get();
-  if (snap.exists) return;
-
   final role = isDoctorEmail(email) ? RoleRoutes.doctor : RoleRoutes.patient;
-
-  await ref.set({
-    "uid": uid,
-    "email": email.trim().toLowerCase(),
-    "role": role,
-    "createdAt": FieldValue.serverTimestamp(),
-  }, SetOptions(merge: true));
+  final data = <String, dynamic>{
+    'id': uid,
+    'email': email.trim().toLowerCase(),
+    'role': role,
+    'name': name ?? '',
+    'age': age,
+  };
+  if (avatarUrl != null) data['avatar_url'] = avatarUrl;
+  await supabase.from('users').upsert(data, onConflict: 'id');
 }
 
 Future<void> ensureRoleDoc({
@@ -63,29 +58,32 @@ Future<void> ensureRoleDoc({
   required String email,
   required String role,
   String? name,
+  String? avatarUrl,
+  String? medicalRecordUrl,
 }) async {
-  final fs = FirebaseFirestore.instance;
   final safeName = (name ?? '').trim();
   if (role == RoleRoutes.doctor) {
-    await fs.collection('doctors').doc(uid).set({
-      'uid': uid,
+    final data = <String, dynamic>{
+      'id': uid,
       'email': email.trim().toLowerCase(),
       'name': safeName.isEmpty ? 'Doctor' : safeName,
-      'createdAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    };
+    if (avatarUrl != null) data['avatar_url'] = avatarUrl;
+    await supabase.from('doctors').upsert(data, onConflict: 'id');
   } else {
-    await fs.collection('patients').doc(uid).set({
-      'uid': uid,
+    final data = <String, dynamic>{
+      'id': uid,
       'email': email.trim().toLowerCase(),
       'name': safeName.isEmpty ? 'Patient' : safeName,
-      'createdAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    };
+    if (avatarUrl != null) data['avatar_url'] = avatarUrl;
+    if (medicalRecordUrl != null) data['medical_record_url'] = medicalRecordUrl;
+    await supabase.from('patients').upsert(data, onConflict: 'id');
   }
 }
 
 Future<void> validate_email_password(
   BuildContext context,
-  FirebaseAuth auth,
   TextEditingController emailController,
   TextEditingController passwordController,
 ) async {
@@ -93,32 +91,31 @@ Future<void> validate_email_password(
     final email = emailController.text.trim();
     final password = passwordController.text;
 
-    final cred = await auth.signInWithEmailAndPassword(
+    final response = await Supabase.instance.client.auth.signInWithPassword(
       email: email,
       password: password,
     );
 
-    final user = cred.user;
+    final user = response.user;
     if (user == null) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('Login failed: user is null'))),
+        const SnackBar(content: Text('Login failed. Please try again.')),
       );
       return;
     }
 
-    String? role = await fetchRoleFromFirestore(user.uid);
+    final metadata = user.userMetadata ?? {};
+    final name = metadata['name']?.toString();
+    final age = metadata['age'] is int
+        ? metadata['age']
+        : int.tryParse(metadata['age']?.toString() ?? '');
 
-    role ??= isDoctorEmail(user.email ?? email)
-        ? RoleRoutes.doctor
-        : RoleRoutes.patient;
+    String? role = await fetchRoleFromSupabase(user.id);
+    role ??= isDoctorEmail(email) ? RoleRoutes.doctor : RoleRoutes.patient;
 
-    await ensureUserProfile(uid: user.uid, email: user.email ?? email);
-    await ensureRoleDoc(
-      uid: user.uid,
-      email: user.email ?? email,
-      role: role,
-      name: user.displayName,
-    );
+    await ensureUserProfile(uid: user.id, email: email, name: name, age: age);
+    await ensureRoleDoc(uid: user.id, email: email, role: role, name: name);
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool("isLoggedIn", true);
@@ -134,24 +131,18 @@ Future<void> validate_email_password(
     } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => PatientHomeScreen(userId: user.uid)),
+        MaterialPageRoute(builder: (_) => PatientHomeScreen(userId: user.id)),
       );
     }
-  } on FirebaseAuthException catch (e) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(
-      SnackBar(content: Text(e.message ?? context.tr('Login failed'))),
+  } on AuthException catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(friendlyAuthError(e.message))),
     );
   } catch (e) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(
-      SnackBar(
-        content: Text(
-          context.tr('Unexpected error: {error}', params: {'error': '$e'}),
-        ),
-      ),
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(friendlyAuthError(e.toString()))),
     );
   }
 }

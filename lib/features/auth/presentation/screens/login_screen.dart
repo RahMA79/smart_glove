@@ -1,9 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/app_text_field.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
-import 'package:smart_glove/sensor.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_glove/core/localization/app_localizations.dart';
 import 'package:smart_glove/core/localization/locale_notifier.dart';
@@ -13,19 +11,14 @@ import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _loading = false;
 
   @override
@@ -38,12 +31,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _onLoginPressed() async {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _loading = true);
     try {
       await validate_email_password(
         context,
-        _auth,
         _emailController,
         _passwordController,
       );
@@ -55,8 +46,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(context.tr('Login')),
         actions: [
@@ -70,20 +64,48 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: SizeConfig.blockWidth * 5,
-          vertical: SizeConfig.blockHeight * 3,
+          vertical: SizeConfig.blockHeight * 2,
         ),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              Image.asset(
-                'assets/images/login.png',
-                fit: BoxFit.cover,
-                height: SizeConfig.blockHeight * 35,
+              // Header image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  'assets/images/login.png',
+                  fit: BoxFit.cover,
+                  height: SizeConfig.blockHeight * 30,
+                  width: double.infinity,
+                ),
               ),
 
-              SizedBox(height: SizeConfig.blockHeight * 4),
+              SizedBox(height: SizeConfig.blockHeight * 3),
 
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  context.tr('Welcome Back'),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              SizedBox(height: SizeConfig.blockHeight * 0.5),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  context.tr('Login to your account'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: cs.onSurface.withOpacity(0.6),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: SizeConfig.blockHeight * 3),
+
+              // Email
               AppTextField(
                 label: context.tr('Email'),
                 hint: context.tr('Enter your email'),
@@ -92,34 +114,37 @@ class _LoginScreenState extends State<LoginScreen> {
                 validator: (v) {
                   final value = v?.trim() ?? '';
                   if (value.isEmpty) return context.tr('Email is required');
-                  if (!value.contains('@'))
-                    return context.tr('Enter a valid email');
+                  final emailRegex = RegExp(r'^[\w\.\-]+@[\w\-]+\.\w{2,}$');
+                  if (!emailRegex.hasMatch(value)) {
+                    return context.tr('Please enter a valid email address');
+                  }
                   return null;
                 },
               ),
 
               SizedBox(height: SizeConfig.blockHeight * 2),
 
+              // Password with toggle
               AppTextField(
                 label: context.tr('Password'),
                 hint: context.tr('Enter your password'),
                 controller: _passwordController,
-                keyboardType: TextInputType.visiblePassword,
-                obscureText: true,
+                isPassword: true,
                 validator: (v) {
                   final value = v ?? '';
-                  if (value.isEmpty)
-                    return context.tr('Password is required');
+                  if (value.isEmpty) return context.tr('Password is required');
                   if (value.length < 6)
-                    return context.tr('Min 6 characters');
+                    return context.tr('Password must be at least 6 characters');
                   return null;
                 },
               ),
 
-              SizedBox(height: SizeConfig.blockHeight * 3),
+              SizedBox(height: SizeConfig.blockHeight * 3.5),
 
               PrimaryButton(
-                text: _loading ? context.tr('Loading...') : context.tr('Login'),
+                text: _loading
+                    ? context.tr('Logging in...')
+                    : context.tr('Login'),
                 onPressed: () {
                   if (!_loading) _onLoginPressed();
                 },
@@ -132,33 +157,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Text(
                     context.tr("Don't have an account?"),
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: theme.textTheme.bodyMedium,
                   ),
                   TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const RegisterScreen(),
-                        ),
-                      );
-                    },
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                    ),
                     child: Text(context.tr('Sign up')),
                   ),
                 ],
               ),
-
-              TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => SensorScreen(),
-                        ),
-                      );
-                    },
-                    child: Text(context.tr('sensor_screen')),
-                  ),
             ],
           ),
         ),

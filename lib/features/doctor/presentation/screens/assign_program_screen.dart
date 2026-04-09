@@ -1,5 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
@@ -8,6 +7,7 @@ import '../widgets/patient_header_card.dart';
 import '../widgets/program_select_card.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/create_program_screen.dart';
 import 'package:smart_glove/core/localization/app_localizations.dart';
+import 'package:smart_glove/supabase_client.dart';
 
 class AssignProgramScreen extends StatefulWidget {
   final String patientId;
@@ -28,13 +28,12 @@ class AssignProgramScreen extends StatefulWidget {
 class _AssignProgramScreenState extends State<AssignProgramScreen> {
   String? _selectedProgramId;
   bool _assigning = false;
-
   String? _doctorId;
 
   @override
   void initState() {
     super.initState();
-    _doctorId = FirebaseAuth.instance.currentUser?.uid;
+    _doctorId = Supabase.instance.client.auth.currentUser?.id;
   }
 
   double _toDouble(dynamic v, double fallback) {
@@ -99,18 +98,16 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
             SizedBox(height: SizeConfig.blockHeight * 1.2),
 
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('doctors')
-                    .doc(_doctorId)
-                    .collection('programs')
-                    .orderBy('createdAt', descending: true)
-                    .snapshots(),
+              child: StreamBuilder<List<Map<String, dynamic>>>(
+                stream: supabase
+                    .from('programs')
+                    .stream(primaryKey: ['id'])
+                    .eq('doctor_id', _doctorId!)
+                    .order('created_at', ascending: false),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
-
                   if (snapshot.hasError) {
                     return Center(
                       child: Text(
@@ -122,45 +119,35 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
                     );
                   }
 
-                  final docs = snapshot.data?.docs ?? [];
+                  final docs = snapshot.data ?? [];
                   if (docs.isEmpty) {
                     return Center(child: Text(context.tr('no_programs_yet')));
                   }
 
-                  final programs = docs.map((d) {
-                    final data = d.data() as Map<String, dynamic>;
+                  final programs = docs.map((data) {
                     return TherapyProgramModel(
-                      id: d.id,
+                      id: data['id'].toString(),
                       name: (data['name'] ?? '').toString(),
-                      injuryType: (data['injuryType'] ?? 'Stroke').toString(),
-                      sessionDuration: _toDouble(
-                        data['sessionDurationMin'],
-                        30,
-                      ),
-                      fingerAngle: _toDouble(
-                        data['targetFingerFlexionDeg'],
-                        60,
-                      ),
-                      motorAssist: _toDouble(
-                        data['motorAssistancePercent'],
-                        50,
-                      ),
+                      injuryType:
+                          (data['injury_type'] ?? 'Stroke').toString(),
+                      sessionDuration:
+                          _toDouble(data['session_duration_min'], 30),
+                      fingerAngle:
+                          _toDouble(data['target_finger_flexion_deg'], 60),
+                      motorAssist:
+                          _toDouble(data['motor_assistance_percent'], 50),
                       emgThreshold: _toDouble(
-                        data['emgActivationThresholdPercentMvc'],
+                        data['emg_activation_threshold_percent_mvc'],
                         30,
                       ),
                     );
                   }).toList();
 
-                  final stillExists = programs.any(
-                    (p) => p.id == _selectedProgramId,
-                  );
-
+                  final stillExists =
+                      programs.any((p) => p.id == _selectedProgramId);
                   if (_selectedProgramId != null && !stillExists) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted) {
-                        setState(() => _selectedProgramId = null);
-                      }
+                      if (mounted) setState(() => _selectedProgramId = null);
                     });
                   }
 
@@ -204,11 +191,8 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
       context,
       MaterialPageRoute(builder: (_) => const CreateProgramScreen()),
     );
-
     if (created == null) return;
-
     setState(() => _selectedProgramId = created.id);
-
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(context.tr('program_created_selected'))),
@@ -217,72 +201,52 @@ class _AssignProgramScreenState extends State<AssignProgramScreen> {
 
   Future<void> _onAssignPressed() async {
     final programId = _selectedProgramId!;
-    final db = FirebaseFirestore.instance;
-
     final doctorId = _doctorId!;
-    final patientRef = db
-        .collection('doctors')
-        .doc(doctorId)
-        .collection('patients')
-        .doc(widget.patientId);
-
-    final newProgramRef = db
-        .collection('doctors')
-        .doc(doctorId)
-        .collection('programs')
-        .doc(programId);
-
     setState(() => _assigning = true);
 
     try {
-      await db.runTransaction((tx) async {
-        final newProgSnap = await tx.get(newProgramRef);
-        if (!newProgSnap.exists) {
-          throw Exception(context.tr('selected_program_not_found'));
-        }
+      // Get old assigned program for this patient
+      final patientRow = await supabase
+          .from('doctor_patients')
+          .select('assigned_program_id')
+          .eq('doctor_id', doctorId)
+          .eq('patient_id', widget.patientId)
+          .maybeSingle();
 
-        final patientSnap = await tx.get(patientRef);
+      final oldProgramId =
+          patientRow?['assigned_program_id']?.toString();
 
-        String? oldProgramId;
-        if (patientSnap.exists) {
-          final pdata = patientSnap.data() as Map<String, dynamic>;
-          oldProgramId = pdata['assignedProgramId']?.toString();
-        }
+      // Decrement old program patients count
+      if (oldProgramId != null &&
+          oldProgramId.isNotEmpty &&
+          oldProgramId != programId) {
+        await supabase.rpc('decrement_patients_count', params: {
+          'program_id': oldProgramId,
+        });
+      }
 
-        if (oldProgramId == programId) return;
+      // Update patient row
+      await supabase.from('doctor_patients').upsert({
+        'doctor_id': doctorId,
+        'patient_id': widget.patientId,
+        'name': widget.patientName,
+        'condition': widget.condition,
+        'assigned_program_id': programId,
+        'assigned_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'doctor_id,patient_id');
 
-        if (oldProgramId != null && oldProgramId.isNotEmpty) {
-          final oldProgramRef = db
-              .collection('doctors')
-              .doc(doctorId)
-              .collection('programs')
-              .doc(oldProgramId);
-
-          final oldSnap = await tx.get(oldProgramRef);
-          if (oldSnap.exists) {
-            tx.set(oldProgramRef, {
-              'patientsCount': FieldValue.increment(-1),
-              'updatedAt': FieldValue.serverTimestamp(),
-            }, SetOptions(merge: true));
-          }
-        }
-
-        tx.set(patientRef, {
-          'name': widget.patientName,
-          'condition': widget.condition,
-          'assignedProgramId': programId,
-          'assignedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-
-        tx.set(newProgramRef, {
-          'patientsCount': FieldValue.increment(1),
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-      });
+      // Increment new program patients count
+      if (oldProgramId != programId) {
+        await supabase.rpc('increment_patients_count', params: {
+          'program_id': programId,
+        });
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('program_assigned_successfully'))),
+        SnackBar(
+          content: Text(context.tr('program_assigned_successfully')),
+        ),
       );
       Navigator.pop(context);
     } catch (e) {

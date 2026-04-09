@@ -1,5 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
@@ -13,10 +12,10 @@ import 'package:smart_glove/features/doctor/presentation/widgets/doctor_bottom_n
 import 'package:smart_glove/features/doctor/presentation/screens/new_patient_request_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/settings_screen.dart';
 import 'package:smart_glove/core/localization/app_localizations.dart';
+import 'package:smart_glove/supabase_client.dart';
 
 class DoctorHomeScreen extends StatefulWidget {
   const DoctorHomeScreen({super.key});
-
   @override
   State<DoctorHomeScreen> createState() => _DoctorHomeScreenState();
 }
@@ -28,18 +27,13 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   @override
   void initState() {
     super.initState();
-    _doctorId = FirebaseAuth.instance.currentUser?.uid;
+    _doctorId = Supabase.instance.client.auth.currentUser?.id;
   }
 
-  double _toDouble(dynamic v, double fallback) {
-    if (v is num) return v.toDouble();
-    return fallback;
-  }
-
-  int _toInt(dynamic v, int fallback) {
-    if (v is num) return v.toInt();
-    return fallback;
-  }
+  double _toDouble(dynamic v, double fallback) =>
+      v is num ? v.toDouble() : fallback;
+  int _toInt(dynamic v, int fallback) =>
+      v is num ? v.toInt() : fallback;
 
   @override
   Widget build(BuildContext context) {
@@ -69,84 +63,58 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             SizedBox(height: SizeConfig.blockHeight * 3),
             Text(
               context.tr('Therapy Programs'),
-              style: textTheme.titleMedium?.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
+              style: textTheme.titleMedium
+                  ?.copyWith(fontSize: 18, fontWeight: FontWeight.w700),
             ),
             SizedBox(height: SizeConfig.blockHeight * 2),
 
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('doctors')
-                  .doc(_doctorId)
-                  .collection('programs')
-                  .orderBy('createdAt', descending: true)
-                  .snapshots(),
+            StreamBuilder<List<Map<String, dynamic>>>(
+              stream: supabase
+                  .from('programs')
+                  .stream(primaryKey: ['id'])
+                  .eq('doctor_id', _doctorId!)
+                  .order('created_at', ascending: false),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Text(
-                    context.tr(
-                      'error_with_details',
-                      params: {'error': '${snapshot.error}'},
-                    ),
-                  );
+                  return Text('Error: ${snapshot.error}');
                 }
-
-                final docs = snapshot.data?.docs ?? [];
+                final docs = snapshot.data ?? [];
                 if (docs.isEmpty) {
                   return Text(context.tr('no_programs_yet'));
                 }
-
                 return Column(
-                  children: docs.map((d) {
-                    final data = d.data() as Map<String, dynamic>;
-
+                  children: docs.map((data) {
                     final program = TherapyProgramModel(
-                      id: d.id,
+                      id: data['id'].toString(),
                       name: (data['name'] ?? '').toString(),
-                      injuryType: (data['injuryType'] ?? 'Stroke').toString(),
-                      sessionDuration: _toDouble(
-                        data['sessionDurationMin'],
-                        30,
-                      ),
-                      fingerAngle: _toDouble(
-                        data['targetFingerFlexionDeg'],
-                        60,
-                      ),
-                      motorAssist: _toDouble(
-                        data['motorAssistancePercent'],
-                        50,
-                      ),
+                      injuryType: (data['injury_type'] ?? 'Stroke').toString(),
+                      sessionDuration:
+                          _toDouble(data['session_duration_min'], 30),
+                      fingerAngle:
+                          _toDouble(data['target_finger_flexion_deg'], 60),
+                      motorAssist:
+                          _toDouble(data['motor_assistance_percent'], 50),
                       emgThreshold: _toDouble(
-                        data['emgActivationThresholdPercentMvc'],
-                        30,
-                      ),
+                          data['emg_activation_threshold_percent_mvc'], 30),
                     );
-
-                    final patientsCount = _toInt(data['patientsCount'], 0);
-
                     return Padding(
                       padding: EdgeInsets.only(
-                        bottom: SizeConfig.blockHeight * 1.5,
-                      ),
+                          bottom: SizeConfig.blockHeight * 1.5),
                       child: ProgramCard(
                         title: program.name,
-                        patientsCount: patientsCount,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ProgramConfigScreen(
-                                programId: program.id,
-                                programName: program.name,
-                              ),
+                        patientsCount: _toInt(data['patients_count'], 0),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ProgramConfigScreen(
+                              programId: program.id,
+                              programName: program.name,
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       ),
                     );
                   }).toList(),
@@ -155,17 +123,12 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             ),
 
             SizedBox(height: SizeConfig.blockHeight * 3),
-
             PrimaryButton(
               text: context.tr('Create New Program'),
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const CreateProgramScreen(),
-                  ),
-                );
-              },
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CreateProgramScreen()),
+              ),
             ),
           ],
         ),
@@ -175,29 +138,13 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
         onChanged: (index) {
           setState(() => _navIndex = index);
           if (index == 0) return;
-
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CreateProgramScreen()),
-            );
-          }
-
-          if (index == 2) {
-            Navigator.push(
-              context,
+          if (index == 1) Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const CreateProgramScreen()));
+          if (index == 2) Navigator.push(context,
               MaterialPageRoute(
-                builder: (_) => const NewPatientRequestScreen(),
-              ),
-            );
-          }
-
-          if (index == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            );
-          }
+                  builder: (_) => const NewPatientRequestScreen()));
+          if (index == 3) Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()));
         },
       ),
     );

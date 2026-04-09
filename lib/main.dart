@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:smart_glove/features/auth/presentation/screens/splash_screen.dart';
-import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_notifier.dart';
@@ -11,11 +10,17 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/localization/locale_notifier.dart';
 
+const String supabaseUrl = 'https://gxiytqblojeitrebecfw.supabase.co';
+const String supabaseAnonKey =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4aXl0cWJsb2plaXRyZWJlY2Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNzM3NjgsImV4cCI6MjA4ODg0OTc2OH0.FYg-TRwVoB5P9qNGdAkcMphfhgly9yv-ehGgTnoHLls';
+
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+
   final themeLocalDataSource = ThemeLocalDataSource();
   final themeRepository = ThemeRepository(themeLocalDataSource);
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final localeNotifier = LocaleNotifier();
   await localeNotifier.load();
@@ -51,7 +56,6 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeNotifier.themeMode,
-
       locale: localeNotifier.locale,
       supportedLocales: AppLocalizations.supported,
       localizationsDelegates: const [
@@ -60,7 +64,6 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-
       home: SplashScreen(),
     );
   }

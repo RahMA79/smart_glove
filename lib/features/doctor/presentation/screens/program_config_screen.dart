@@ -1,10 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/primary_button.dart';
 import '../../presentation/widgets/labeled_slider.dart';
 import 'package:smart_glove/core/localization/app_localizations.dart';
+import 'package:smart_glove/supabase_client.dart';
 
 class ProgramConfigScreen extends StatefulWidget {
   final String programId;
@@ -35,7 +35,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
   @override
   void initState() {
     super.initState();
-    _doctorId = FirebaseAuth.instance.currentUser?.uid;
+    _doctorId = Supabase.instance.client.auth.currentUser?.id;
     _loadProgram();
   }
 
@@ -46,39 +46,27 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
 
   Future<void> _loadProgram() async {
     setState(() => _loading = true);
-
     try {
       if (_doctorId == null) return;
 
-      final doc = await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(_doctorId)
-          .collection('programs')
-          .doc(widget.programId)
-          .get();
+      final data = await supabase
+          .from('programs')
+          .select()
+          .eq('id', widget.programId)
+          .eq('doctor_id', _doctorId!)
+          .maybeSingle();
 
-      if (!doc.exists) return;
-
-      final data = doc.data() as Map<String, dynamic>;
+      if (data == null) return;
 
       setState(() {
-        _sessionDurationMin = _toDouble(
-          data['sessionDurationMin'],
-          _sessionDurationMin,
-        );
-
-        _targetFingerFlexionDeg = _toDouble(
-          data['targetFingerFlexionDeg'],
-          _targetFingerFlexionDeg,
-        );
-
-        _motorAssistancePercent = _toDouble(
-          data['motorAssistancePercent'],
-          _motorAssistancePercent,
-        );
-
+        _sessionDurationMin =
+            _toDouble(data['session_duration_min'], _sessionDurationMin);
+        _targetFingerFlexionDeg =
+            _toDouble(data['target_finger_flexion_deg'], _targetFingerFlexionDeg);
+        _motorAssistancePercent =
+            _toDouble(data['motor_assistance_percent'], _motorAssistancePercent);
         _emgActivationThresholdPercentMvc = _toDouble(
-          data['emgActivationThresholdPercentMvc'],
+          data['emg_activation_threshold_percent_mvc'],
           _emgActivationThresholdPercentMvc,
         );
       });
@@ -94,9 +82,7 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final cs = theme.colorScheme;
-
     final disabled = _saving || _deleting;
-
     final destructiveColor = cs.error;
     final iconBaseColor = theme.brightness == Brightness.dark
         ? cs.onSurface.withOpacity(0.85)
@@ -152,11 +138,9 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                     style: textTheme.titleMedium?.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: cs.onSurface,
                     ),
                   ),
                   SizedBox(height: SizeConfig.blockHeight * 1.5),
-
                   LabeledSlider(
                     title: context.tr('session_duration'),
                     value: _sessionDurationMin,
@@ -168,19 +152,15 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                         ? (_) {}
                         : (v) => setState(() => _sessionDurationMin = v),
                   ),
-
                   SizedBox(height: SizeConfig.blockHeight * 2),
-
                   Text(
                     context.tr('finger_angles_and_assistance'),
                     style: textTheme.titleMedium?.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: cs.onSurface,
                     ),
                   ),
                   SizedBox(height: SizeConfig.blockHeight * 1.5),
-
                   LabeledSlider(
                     title: context.tr('target_finger_flexion'),
                     value: _targetFingerFlexionDeg,
@@ -190,11 +170,10 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                     unit: context.tr('degree_unit'),
                     onChanged: disabled
                         ? (_) {}
-                        : (v) => setState(() => _targetFingerFlexionDeg = v),
+                        : (v) =>
+                            setState(() => _targetFingerFlexionDeg = v),
                   ),
-
                   SizedBox(height: SizeConfig.blockHeight * 1.5),
-
                   LabeledSlider(
                     title: context.tr('motor_assistance_level'),
                     value: _motorAssistancePercent,
@@ -204,21 +183,18 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                     unit: '%',
                     onChanged: disabled
                         ? (_) {}
-                        : (v) => setState(() => _motorAssistancePercent = v),
+                        : (v) =>
+                            setState(() => _motorAssistancePercent = v),
                   ),
-
                   SizedBox(height: SizeConfig.blockHeight * 3),
-
                   Text(
                     context.tr('emg_threshold'),
                     style: textTheme.titleMedium?.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: cs.onSurface,
                     ),
                   ),
                   SizedBox(height: SizeConfig.blockHeight * 1.5),
-
                   LabeledSlider(
                     title: context.tr('emg_activation_threshold'),
                     value: _emgActivationThresholdPercentMvc,
@@ -229,12 +205,11 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
                     onChanged: disabled
                         ? (_) {}
                         : (v) => setState(
-                            () => _emgActivationThresholdPercentMvc = v,
-                          ),
+                              () =>
+                                  _emgActivationThresholdPercentMvc = v,
+                            ),
                   ),
-
                   SizedBox(height: SizeConfig.blockHeight * 4),
-
                   PrimaryButton(
                     text: _saving
                         ? context.tr('saving')
@@ -252,21 +227,15 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
 
   Future<void> _onSavePressed() async {
     setState(() => _saving = true);
-
     try {
-      await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(_doctorId)
-          .collection('programs')
-          .doc(widget.programId)
-          .update({
-            'sessionDurationMin': _sessionDurationMin,
-            'targetFingerFlexionDeg': _targetFingerFlexionDeg,
-            'motorAssistancePercent': _motorAssistancePercent,
-            'emgActivationThresholdPercentMvc':
-                _emgActivationThresholdPercentMvc,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+      await supabase.from('programs').update({
+        'session_duration_min': _sessionDurationMin,
+        'target_finger_flexion_deg': _targetFingerFlexionDeg,
+        'motor_assistance_percent': _motorAssistancePercent,
+        'emg_activation_threshold_percent_mvc':
+            _emgActivationThresholdPercentMvc,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', widget.programId);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -277,7 +246,9 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.tr('failed_to_save', params: {'error': '$e'})),
+          content: Text(
+            context.tr('failed_to_save', params: {'error': '$e'}),
+          ),
         ),
       );
     } finally {
@@ -288,7 +259,6 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
   Future<void> _confirmDelete() async {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -317,27 +287,21 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
         ],
       ),
     );
-
-    if (ok == true) {
-      await _deleteProgram();
-    }
+    if (ok == true) await _deleteProgram();
   }
 
   Future<void> _deleteProgram() async {
     setState(() => _deleting = true);
-
     try {
-      await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(_doctorId)
-          .collection('programs')
-          .doc(widget.programId)
-          .delete();
+      await supabase
+          .from('programs')
+          .delete()
+          .eq('id', widget.programId);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.tr('program_deleted'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('program_deleted'))),
+      );
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;

@@ -1,5 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/widgets/app_text_field.dart';
@@ -11,6 +10,7 @@ import 'new_patient_request_screen.dart';
 import 'settings_screen.dart';
 import '../widgets/labeled_slider.dart';
 import 'package:smart_glove/features/doctor/data/models/therapy_program_model.dart';
+import 'package:smart_glove/supabase_client.dart';
 
 class CreateProgramScreen extends StatefulWidget {
   const CreateProgramScreen({super.key});
@@ -29,14 +29,13 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
   double _emgThreshold = 30;
 
   bool _saving = false;
-
   String? _doctorId;
   int _navIndex = 1;
 
   @override
   void initState() {
     super.initState();
-    _doctorId = FirebaseAuth.instance.currentUser?.uid;
+    _doctorId = Supabase.instance.client.auth.currentUser?.id;
   }
 
   @override
@@ -84,7 +83,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             const SizedBox(height: 8),
 
             DropdownButtonFormField<String>(
-              initialValue: _selectedInjuryType,
+              value: _selectedInjuryType,
               items: [
                 DropdownMenuItem(
                   value: 'Stroke',
@@ -223,14 +222,12 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
         onChanged: (index) {
           if (index == _navIndex) return;
           setState(() => _navIndex = index);
-
           if (index == 0) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const DoctorHomeScreen()),
             );
           }
-
           if (index == 2) {
             Navigator.pushReplacement(
               context,
@@ -239,7 +236,6 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
               ),
             );
           }
-
           if (index == 3) {
             Navigator.pushReplacement(
               context,
@@ -271,28 +267,23 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
     setState(() => _saving = true);
 
     try {
-      final ref = FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(_doctorId)
-          .collection('programs')
-          .doc();
-
-      final now = FieldValue.serverTimestamp();
-
-      await ref.set({
-        'name': name,
-        'injuryType': _selectedInjuryType ?? 'Stroke',
-        'sessionDurationMin': _sessionDuration,
-        'targetFingerFlexionDeg': _fingerAngle,
-        'motorAssistancePercent': _motorAssist,
-        'emgActivationThresholdPercentMvc': _emgThreshold,
-        'patientsCount': 0,
-        'createdAt': now,
-        'updatedAt': now,
-      });
+      final response = await supabase
+          .from('programs')
+          .insert({
+            'doctor_id': _doctorId,
+            'name': name,
+            'injury_type': _selectedInjuryType ?? 'Stroke',
+            'session_duration_min': _sessionDuration,
+            'target_finger_flexion_deg': _fingerAngle,
+            'motor_assistance_percent': _motorAssist,
+            'emg_activation_threshold_percent_mvc': _emgThreshold,
+            'patients_count': 0,
+          })
+          .select()
+          .single();
 
       final created = TherapyProgramModel(
-        id: ref.id,
+        id: response['id'].toString(),
         name: name,
         injuryType: _selectedInjuryType ?? "Stroke",
         sessionDuration: _sessionDuration,
@@ -308,7 +299,10 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            context.tr('failed_to_create_program', params: {'error': '$e'}),
+            context.tr(
+              'failed_to_create_program',
+              params: {'error': '$e'},
+            ),
           ),
         ),
       );
