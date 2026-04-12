@@ -394,7 +394,25 @@ class _CreateProgramScreenState extends State<CreateProgramScreen>
         emgThreshold: _emgThreshold,
       );
       if (!mounted) return;
-      Navigator.pop(context, created);
+      // Show success snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('program_created_selected')),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      // Navigate back to home (pushReplacement avoids black screen when
+      // this screen was reached via pushReplacement with no route below it)
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const DoctorHomeScreen(),
+          transitionDuration: const Duration(milliseconds: 200),
+          transitionsBuilder: (_, anim, __, child) =>
+              FadeTransition(opacity: anim, child: child),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

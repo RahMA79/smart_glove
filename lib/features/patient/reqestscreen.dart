@@ -181,9 +181,8 @@ class _DoctorRequestScreenState extends State<DoctorRequestScreen> {
               Expanded(
                 child: StreamBuilder<List<Map<String, dynamic>>>(
                   stream: supabase
-                      .from('users')
-                      .stream(primaryKey: ['id'])
-                      .eq('role', 'doctor'),
+                      .from('doctors')
+                      .stream(primaryKey: ['id']),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());

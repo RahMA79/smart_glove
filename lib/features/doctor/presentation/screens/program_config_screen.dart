@@ -5,6 +5,7 @@ import 'package:smart_glove/core/widgets/primary_button.dart';
 import '../../presentation/widgets/labeled_slider.dart';
 import 'package:smart_glove/core/localization/app_localizations.dart';
 import 'package:smart_glove/supabase_client.dart';
+import 'doctor_home_screen.dart';
 
 class ProgramConfigScreen extends StatefulWidget {
   final String programId;
@@ -300,9 +301,22 @@ class _ProgramConfigScreenState extends State<ProgramConfigScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('program_deleted'))),
+        SnackBar(
+          content: Text(context.tr('program_deleted')),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
-      Navigator.pop(context);
+      // Use pushReplacement so the home screen rebuilds fresh
+      // and the StreamBuilder immediately reflects the deletion
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const DoctorHomeScreen(),
+          transitionDuration: const Duration(milliseconds: 200),
+          transitionsBuilder: (_, anim, __, child) =>
+              FadeTransition(opacity: anim, child: child),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
