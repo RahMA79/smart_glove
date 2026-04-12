@@ -115,7 +115,9 @@ class _DoctorDrawerState extends State<DoctorDrawer> {
             Navigator.pop(context);
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              MaterialPageRoute(
+                builder: (_) => const SettingsScreen(role: 'doctor'),
+              ),
             );
           }),
 

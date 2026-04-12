@@ -110,7 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(context.tr('Settings')),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: Navigator.canPop(context),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -336,7 +336,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
         ],
       ),
-      bottomNavigationBar: widget.role == 'doctor'
+      bottomNavigationBar: Navigator.canPop(context)
+          ? null // Pushed from drawer – use back button, no bottom nav
+          : widget.role == 'doctor'
           ? DoctorBottomNav(
               currentIndex: 3,
               onChanged: (i) {
@@ -351,39 +353,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               currentIndex: 3,
               onTap: (i) {
                 if (i == 3) return;
-                if (i == 1) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return SessionHistoryScreen();
-                      },
-                    ),
-                  );
-                }
-                if (i == 2) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return DoctorRequestScreen();
-                      },
-                    ),
-                  );
-                }
                 final uid = supabase.auth.currentUser?.id ?? '';
-                if (i == 0) {
+                void fadeTo(Widget page) {
                   Navigator.pushReplacement(
                     context,
                     PageRouteBuilder(
-                      pageBuilder: (_, __, ___) =>
-                          PatientHomeScreen(userId: uid),
+                      pageBuilder: (_, __, ___) => page,
                       transitionDuration: const Duration(milliseconds: 200),
                       transitionsBuilder: (_, anim, __, child) =>
                           FadeTransition(opacity: anim, child: child),
                     ),
                   );
                 }
+
+                if (i == 0) fadeTo(PatientHomeScreen(userId: uid));
+                if (i == 1) fadeTo(const SessionHistoryScreen());
+                if (i == 2) fadeTo(const DoctorRequestScreen());
               },
             ),
     );

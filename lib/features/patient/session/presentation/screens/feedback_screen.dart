@@ -3,6 +3,8 @@ import 'package:smart_glove/core/utils/size_config.dart';
 import 'package:smart_glove/core/localization/app_localizations.dart';
 import 'package:smart_glove/features/patient/patient_report/data/models/patient_report_model.dart';
 import 'package:smart_glove/features/patient/patient_report/presentation/screens/patient_report_screen.dart';
+import 'package:smart_glove/features/patient/presentation/screens/patient_home_screen.dart';
+import 'package:smart_glove/supabase_client.dart';
 
 class FeedbackScreen extends StatefulWidget {
   final String sessionTitle;
@@ -48,7 +50,21 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     final sessionAccuracy = 1.0;
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('Feedback'))),
+      appBar: AppBar(
+        title: Text(context.tr('Feedback')),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () {
+            final uid = supabase.auth.currentUser?.id ?? '';
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (_) => PatientHomeScreen(userId: uid),
+              ),
+              (r) => false,
+            );
+          },
+        ),
+      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: SizeConfig.blockWidth * 5,

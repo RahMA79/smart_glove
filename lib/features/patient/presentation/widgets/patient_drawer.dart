@@ -4,7 +4,6 @@ import 'package:smart_glove/core/widgets/avatar_widget.dart';
 import 'package:smart_glove/features/auth/presentation/widgets/logout_function.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/patient_progress_screen.dart';
 import 'package:smart_glove/features/doctor/presentation/screens/settings_screen.dart';
-import 'package:smart_glove/features/doctor/presentation/screens/doctor_notifications_screen.dart';
 
 class PatientDrawer extends StatelessWidget {
   final String patientName;
@@ -124,12 +123,7 @@ class PatientDrawer extends StatelessWidget {
             ),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const DoctorNotificationsScreen(),
-                ),
-              );
+              // Patient notifications – placeholder for future patient-specific screen
             },
           ),
 
@@ -141,7 +135,9 @@ class PatientDrawer extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const SettingsScreen(role: 'patient'),
+                ),
               );
             },
           ),

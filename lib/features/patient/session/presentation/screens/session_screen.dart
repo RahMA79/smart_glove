@@ -23,8 +23,14 @@ class SessionScreen extends StatefulWidget {
 
 class _SessionScreenState extends State<SessionScreen>
     with SingleTickerProviderStateMixin {
-  late int _remainingSeconds;
-  late int _totalSeconds;
+  // ── TEST MODE: timer runs in milliseconds instead of seconds ──────────────
+  // Each "minute" of the program becomes 1000 ms (1 second) for fast testing.
+  // Remove this block and restore the originals below to go back to real time.
+  static const int _msPerMinute = 1000; // 1 real second = 1 program-minute
+  static const Duration _tickInterval = Duration(milliseconds: 100);
+
+  late int _remainingMs;
+  late int _totalMs;
   Timer? _timer;
   bool _paused = false;
   int _currentStep = 0;
@@ -38,8 +44,8 @@ class _SessionScreenState extends State<SessionScreen>
   @override
   void initState() {
     super.initState();
-    _totalSeconds = widget.durationMinutes * 60;
-    _remainingSeconds = _totalSeconds;
+    _totalMs = widget.durationMinutes * _msPerMinute;
+    _remainingMs = _totalMs;
 
     _pulseController = AnimationController(
       vsync: this,
@@ -55,24 +61,27 @@ class _SessionScreenState extends State<SessionScreen>
 
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+    _timer = Timer.periodic(_tickInterval, (t) {
       if (_paused) return;
-      if (_remainingSeconds <= 0) {
+      if (_remainingMs <= 0) {
         t.cancel();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(
-          builder: (_) => FeedbackScreen(
-            sessionTitle: widget.title,
-            exercisesCount: _steps.length,
-            durationSeconds: _totalSeconds,
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => FeedbackScreen(
+              sessionTitle: widget.title,
+              exercisesCount: _steps.length,
+              durationSeconds: _totalMs ~/ 1000,
+            ),
           ),
-        ));
+        );
       } else {
         setState(() {
-          _remainingSeconds--;
+          _remainingMs -= _tickInterval.inMilliseconds;
           // Advance step automatically based on time elapsed
-          final elapsed = _totalSeconds - _remainingSeconds;
-          final stepDuration = _totalSeconds ~/ _steps.length;
+          final elapsed = _totalMs - _remainingMs;
+          final stepDuration = _totalMs ~/ _steps.length;
           _currentStep = (elapsed ~/ stepDuration).clamp(0, _steps.length - 1);
         });
       }
@@ -86,35 +95,41 @@ class _SessionScreenState extends State<SessionScreen>
     super.dispose();
   }
 
-  String _formatTime(int sec) {
-    final m = (sec ~/ 60).toString().padLeft(2, '0');
-    final s = (sec % 60).toString().padLeft(2, '0');
-    return '$m:$s';
+  /// Formats remaining time as  MM:SS.t  (t = tenths of a second)
+  String _formatTime(int ms) {
+    final totalSec = ms ~/ 1000;
+    final m = (totalSec ~/ 60).toString().padLeft(2, '0');
+    final s = (totalSec % 60).toString().padLeft(2, '0');
+    final tenths = (ms % 1000) ~/ 100; // 0-9
+    return '$m:$s.$tenths';
   }
 
   double get _progress {
-    if (_totalSeconds == 0) return 0;
-    return 1 - (_remainingSeconds / _totalSeconds);
+    if (_totalMs == 0) return 0;
+    return 1 - (_remainingMs / _totalMs);
   }
 
   void _onStopPressed() {
     _timer?.cancel();
-    Navigator.pushReplacement(context, MaterialPageRoute(
-      builder: (_) => FeedbackScreen(
-        sessionTitle: widget.title,
-        exercisesCount: _currentStep + 1,
-        durationSeconds: _totalSeconds - _remainingSeconds,
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FeedbackScreen(
+          sessionTitle: widget.title,
+          exercisesCount: _currentStep + 1,
+          durationSeconds: (_totalMs - _remainingMs) ~/ 1000,
+        ),
       ),
-    ));
+    );
   }
 
   void _onSkipPressed() {
     setState(() {
       if (_currentStep < _steps.length - 1) {
         _currentStep++;
-        final stepDuration = _totalSeconds ~/ _steps.length;
-        _remainingSeconds = ((_steps.length - 1 - _currentStep) * stepDuration)
-            .clamp(0, _totalSeconds);
+        final stepDuration = _totalMs ~/ _steps.length;
+        _remainingMs = ((_steps.length - 1 - _currentStep) * stepDuration)
+            .clamp(0, _totalMs);
       }
     });
   }
@@ -152,18 +167,28 @@ class _SessionScreenState extends State<SessionScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_steps[_currentStep],
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900, letterSpacing: -0.2)),
-                Text('Step ${_currentStep + 1} of ${_steps.length}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: cs.onSurface.withOpacity(0.55))),
+                Text(
+                  _steps[_currentStep],
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                Text(
+                  'Step ${_currentStep + 1} of ${_steps.length}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: cs.onSurface.withOpacity(0.55),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 4),
-            Text(context.tr('Keep going until the timer ends.'),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: cs.onSurface.withOpacity(0.60))),
+            Text(
+              context.tr('Keep going until the timer ends.'),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: cs.onSurface.withOpacity(0.60),
+              ),
+            ),
 
             SizedBox(height: SizeConfig.blockHeight * 2.5),
 
@@ -174,15 +199,24 @@ class _SessionScreenState extends State<SessionScreen>
               decoration: BoxDecoration(
                 color: theme.cardColor,
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: theme.dividerColor.withOpacity(isDark ? 0.20 : 0.14)),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.12 : 0.06),
-                    blurRadius: 16, offset: const Offset(0, 8))],
+                border: Border.all(
+                  color: theme.dividerColor.withOpacity(isDark ? 0.20 : 0.14),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.12 : 0.06),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
                   // Animated circular timer
                   ScaleTransition(
-                    scale: _paused ? const AlwaysStoppedAnimation(1.0) : _pulseAnim,
+                    scale: _paused
+                        ? const AlwaysStoppedAnimation(1.0)
+                        : _pulseAnim,
                     child: SizedBox(
                       width: circleSize,
                       height: circleSize,
@@ -194,21 +228,30 @@ class _SessionScreenState extends State<SessionScreen>
                             painter: _CircleTimerPainter(
                               progress: _progress,
                               progressColor: cs.primary,
-                              bgColor: cs.primary.withOpacity(isDark ? 0.12 : 0.10),
+                              bgColor: cs.primary.withOpacity(
+                                isDark ? 0.12 : 0.10,
+                              ),
                               strokeWidth: 14,
                             ),
                           ),
                           Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(_formatTime(_remainingSeconds),
-                                  style: theme.textTheme.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w900, letterSpacing: -1)),
+                              Text(
+                                _formatTime(_remainingMs),
+                                style: theme.textTheme.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -1,
+                                ),
+                              ),
                               const SizedBox(height: 4),
-                              Text(context.tr('Remaining'),
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: cs.onSurface.withOpacity(0.55),
-                                    fontWeight: FontWeight.w600)),
+                              Text(
+                                context.tr('Remaining'),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: cs.onSurface.withOpacity(0.55),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -218,7 +261,10 @@ class _SessionScreenState extends State<SessionScreen>
                   const SizedBox(height: 14),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: cs.primary.withOpacity(isDark ? 0.12 : 0.08),
                       borderRadius: BorderRadius.circular(14),
@@ -226,10 +272,18 @@ class _SessionScreenState extends State<SessionScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(context.tr('Total'),
-                            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-                        Text(context.tr('{count} min', params: {'count': '${widget.durationMinutes}'}),
-                            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w900)),
+                        Text(
+                          context.tr('Total'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          '${_totalMs} ms  (${widget.durationMinutes} min)',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -247,11 +301,17 @@ class _SessionScreenState extends State<SessionScreen>
                     onPressed: () => setState(() => _paused = !_paused),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       side: BorderSide(color: cs.outline.withOpacity(0.40)),
                     ),
-                    child: Text(_paused ? context.tr('Resume') : context.tr('Pause'),
-                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                    child: Text(
+                      _paused ? context.tr('Resume') : context.tr('Pause'),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -260,11 +320,17 @@ class _SessionScreenState extends State<SessionScreen>
                     onPressed: _onSkipPressed,
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       side: BorderSide(color: cs.outline.withOpacity(0.40)),
                     ),
-                    child: Text(context.tr('Skip'),
-                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                    child: Text(
+                      context.tr('Skip'),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -276,10 +342,14 @@ class _SessionScreenState extends State<SessionScreen>
                       foregroundColor: Colors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
-                    child: Text(context.tr('Stop'),
-                        style: const TextStyle(fontWeight: FontWeight.w800)),
+                    child: Text(
+                      context.tr('Stop'),
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
                   ),
                 ),
               ],
