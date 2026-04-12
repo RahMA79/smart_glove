@@ -5,6 +5,7 @@ import 'package:smart_glove/features/doctor/presentation/widgets/drawer_menu.dar
 import '../../data/models/patient_request_model.dart';
 import 'package:smart_glove/core/localization/app_localizations.dart';
 import 'package:smart_glove/features/doctor/presentation/widgets/doctor_bottom_nav.dart';
+import 'package:smart_glove/features/doctor/presentation/widgets/doctor_nav_helper.dart';
 import 'doctor_home_screen.dart';
 import 'create_program_screen.dart';
 import 'settings_screen.dart';
@@ -49,14 +50,14 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Request accepted successfully!'),
-          backgroundColor: Colors.green.shade600,
+          // success snackbar
         ),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to accept: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to accept: $e')));
     }
   }
 
@@ -65,14 +66,14 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
       if (_doctorId == null) return;
       await supabase.from('patient_requests').delete().eq('id', requestId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Request rejected.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Request rejected.')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed: $e')));
     }
   }
 
@@ -81,7 +82,9 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
     final theme = Theme.of(context);
     if (_doctorId == null) {
       return Scaffold(
-        body: Center(child: Text(context.tr('No logged-in doctor. Please login again.'))),
+        body: Center(
+          child: Text(context.tr('No logged-in doctor. Please login again.')),
+        ),
       );
     }
 
@@ -117,9 +120,11 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.inbox_outlined,
-                        size: 64,
-                        color: theme.colorScheme.onSurface.withOpacity(0.3)),
+                    Icon(
+                      Icons.inbox_outlined,
+                      size: 64,
+                      color: theme.colorScheme.onSurface.withOpacity(0.3),
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       context.tr('No new requests.'),
@@ -138,15 +143,18 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final data = docs[index];
-                final patientName =
-                    (data['patient_name'] ?? '').toString().trim();
+                final patientName = (data['patient_name'] ?? '')
+                    .toString()
+                    .trim();
                 final condition = (data['condition'] ?? '').toString().trim();
                 final patientId = (data['patient_id'] ?? '').toString();
                 final requestId = data['id'].toString();
                 final avatarUrl = data['patient_avatar_url']?.toString();
 
                 final req = PatientRequestModel(
-                  patientName: patientName.isEmpty ? 'Unknown Patient' : patientName,
+                  patientName: patientName.isEmpty
+                      ? 'Unknown Patient'
+                      : patientName,
                   condition: condition.isEmpty ? '-' : condition,
                 );
 
@@ -180,12 +188,10 @@ class _NewPatientRequestScreenState extends State<NewPatientRequestScreen> {
         onChanged: (index) {
           if (index == _navIndex) return;
           setState(() => _navIndex = index);
-          if (index == 0) Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (_) => const DoctorHomeScreen()));
-          if (index == 1) Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (_) => const CreateProgramScreen()));
-          if (index == 3) Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()));
+          if (index == 0) doctorNavPush(context, const DoctorHomeScreen());
+          if (index == 1) doctorNavPush(context, const CreateProgramScreen());
+          if (index == 3)
+            doctorNavPush(context, const SettingsScreen(role: 'doctor'));
         },
       ),
     );
@@ -264,8 +270,10 @@ class _RequestCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Icon(Icons.chevron_right,
-                      color: cs.onSurface.withOpacity(0.35)),
+                  Icon(
+                    Icons.chevron_right,
+                    color: cs.onSurface.withOpacity(0.35),
+                  ),
                 ],
               ),
               const SizedBox(height: 14),

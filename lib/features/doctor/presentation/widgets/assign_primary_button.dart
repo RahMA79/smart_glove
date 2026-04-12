@@ -32,7 +32,7 @@ class AssignPrimaryButton extends StatelessWidget {
         child: Text(
           label,
           style: theme.textTheme.titleMedium?.copyWith(
-            color: Colors.white,
+            color: Colors.white, // on primary
             fontWeight: FontWeight.w700,
           ),
         ),

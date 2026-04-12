@@ -48,7 +48,7 @@ class PatientRequestCard extends StatelessWidget {
               _ActionButton(
                 label: context.tr('Accept'),
                 background: primary,
-                foreground: Colors.white,
+                foreground: Colors.white, // on primary
                 onPressed: onAccept,
               ),
               const SizedBox(width: 14),

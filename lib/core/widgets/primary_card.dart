@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 
 class PrimaryCard extends StatelessWidget {
   final Widget child;
@@ -10,16 +9,20 @@ class PrimaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final card = Container(
       padding: padding ?? const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(20),
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: theme.dividerColor.withOpacity(isDark ? 0.18 : 0.10)),
         boxShadow: [
           BoxShadow(
-            blurRadius: 12,
-            spreadRadius: 1,
-            color: Colors.black12.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(isDark ? 0.12 : 0.05),
           ),
         ],
       ),
@@ -27,11 +30,6 @@ class PrimaryCard extends StatelessWidget {
     );
 
     if (onTap == null) return card;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: onTap,
-      child: card,
-    );
+    return InkWell(borderRadius: BorderRadius.circular(18), onTap: onTap, child: card);
   }
 }

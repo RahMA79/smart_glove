@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:smart_glove/core/utils/size_config.dart';
-import '../theme/app_colors.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
@@ -10,24 +9,22 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return SizedBox(
       height: SizeConfig.blockHeight * 6,
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryBlue,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          backgroundColor: cs.primary,
+          foregroundColor: cs.onPrimary,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           padding: const EdgeInsets.symmetric(vertical: 14),
         ),
         onPressed: onPressed,
         child: Text(
           text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
         ),
       ),
     );

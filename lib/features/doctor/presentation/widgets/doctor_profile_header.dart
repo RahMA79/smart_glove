@@ -33,11 +33,21 @@ class _DoctorProfileHeaderState extends State<DoctorProfileHeader> {
     setState(() => _doctorData = data);
   }
 
+  String _getGreeting(BuildContext context) {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return context.tr('good_morning');
+    if (hour < 17) return context.tr('good_afternoon');
+    if (hour < 21) return context.tr('good_evening');
+    return context.tr('good_night');
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final name = _doctorData?['name']?.toString() ?? 'Doctor';
     final avatarUrl = _doctorData?['avatar_url']?.toString();
+    final greeting = _getGreeting(context);
 
     return Row(
       children: [
@@ -51,6 +61,15 @@ class _DoctorProfileHeaderState extends State<DoctorProfileHeader> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                greeting,
+                style: textTheme.bodySmall?.copyWith(
+                  fontSize: 13,
+                  color: cs.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
               Text(
                 name,
                 style: textTheme.titleMedium?.copyWith(

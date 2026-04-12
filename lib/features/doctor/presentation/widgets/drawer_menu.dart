@@ -83,20 +83,34 @@ class _DoctorDrawerState extends State<DoctorDrawer> {
               MaterialPageRoute(builder: (_) => const MyPatientsScreen()),
             );
           }),
-          _drawerItem(context, Icons.person_add, context.tr('New patient requests'), () {
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const NewPatientRequestScreen()),
-            );
-          }),
-          _drawerItem(context, Icons.notifications, context.tr('Notifications'), () {
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const DoctorNotificationsScreen()),
-            );
-          }),
+          _drawerItem(
+            context,
+            Icons.person_add,
+            context.tr('New patient requests'),
+            () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const NewPatientRequestScreen(),
+                ),
+              );
+            },
+          ),
+          _drawerItem(
+            context,
+            Icons.notifications,
+            context.tr('Notifications'),
+            () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DoctorNotificationsScreen(),
+                ),
+              );
+            },
+          ),
           _drawerItem(context, Icons.settings, context.tr('Settings'), () {
             Navigator.pop(context);
             Navigator.push(

@@ -144,6 +144,7 @@ const Map<String, String> _en = {
   'Your Therapy Programs': 'Your Therapy Programs',
   'Could not open gallery: {error}': 'Could not open gallery: {error}',
   'Patient': 'Patient',
+  'Doctor': 'Doctor',
 
   // Doctor
   'Therapy Programs': 'Therapy Programs',
@@ -334,6 +335,81 @@ const Map<String, String> _en = {
   "selected_program_not_found":
       "Selected program not found. Please refresh and select an existing program.",
   "save_changes": "Save Changes",
+
+  // Greetings
+  'good_morning': 'Good Morning',
+  'good_afternoon': 'Good Afternoon',
+  'good_evening': 'Good Evening',
+  'good_night': 'Good Night',
+
+  // Theme
+  'Theme': 'Theme',
+  'Light': 'Light',
+  'System': 'System',
+  'Dark': 'Dark',
+
+  // Doctor home stats
+  'Patients': 'Patients',
+  'Protocols': 'Protocols',
+  'Active': 'Active',
+  'New': '+ New',
+  'New Protocol': 'New Protocol',
+
+  // Patient home stats
+  'Sessions Done': 'Sessions Done',
+  'This Week': 'This Week',
+  'Progress': 'Progress',
+
+  // Stroke programs
+  'Stroke Rehab': 'Stroke Rehab',
+  'Post-Stroke Recovery': 'Post-Stroke Recovery',
+  'Moderate': 'Moderate',
+  'Gentle': 'Gentle',
+  'stroke_rehab_desc':
+      'Designed to improve hand mobility by stimulating the flexor and extensor muscles.\nHelps restore nerve function and enhance activation.',
+
+  // Session history
+  'Session History': 'Session History',
+  'Overall Progress': 'Overall Progress',
+  '78% completion rate this month': '78% completion rate this month',
+  'Recent Sessions': 'Recent Sessions',
+  'Missed': 'Missed',
+
+  // Session details
+  'About this session': 'About this session',
+  'Session Steps': 'Session Steps',
+  'Exercises': 'Exercises',
+  'Glove Connection': 'Glove Connection',
+  'Ensure your Smart Glove is paired and charged before starting.':
+      'Ensure your Smart Glove is paired and charged before starting.',
+
+  // Session screen
+  'Resume': 'Resume',
+  'Pause': 'Pause',
+
+  // Feedback
+  'Session Complete!': 'Session Complete!',
+  'Time taken': 'Time taken',
+  'Session Accuracy': 'Session Accuracy',
+  'How was your pain level?': 'How was your pain level?',
+  'How much effort did you put in?': 'How much effort did you put in?',
+  'Any notes for your doctor...': 'Any notes for your doctor...',
+  'View Report': 'View Report',
+  'Notes': 'Notes',
+
+  // Report
+  'Report sent to your doctor': 'Report sent to your doctor',
+  'Back to Home': 'Back to Home',
+
+  // Create program exercises tab
+  'Session Settings': 'Session Settings',
+  'Add Exercise': 'Add Exercise',
+  'Edit Exercise': 'Edit Exercise',
+  'Exercise Name': 'Exercise Name',
+  'Reps': 'Reps',
+  'Sets': 'Sets',
+  'Rest (s)': 'Rest (s)',
+  'no_exercises_yet': 'No exercises yet.',
 };
 const Map<String, String> _ar = {
   // General
@@ -421,6 +497,7 @@ const Map<String, String> _ar = {
   'Your Therapy Programs': 'برامج العلاج الخاصة بك',
   'Could not open gallery: {error}': 'تعذّر فتح المعرض: {error}',
   'Patient': 'مريض',
+  'Doctor': 'طبيب',
 
   // Doctor
   'Therapy Programs': 'برامج العلاج',
@@ -603,4 +680,80 @@ const Map<String, String> _ar = {
   "selected_program_not_found":
       "البرنامج المحدد غير موجود. يرجى تحديث الصفحة واختيار برنامج موجود.",
   "save_changes": "حفظ التغييرات",
+
+  // Greetings
+  'good_morning': 'صباح الخير',
+  'good_afternoon': 'مساء الخير',
+  'good_evening': 'مساء النور',
+  'good_night': 'تصبح على خير',
+
+  // Theme
+  'Theme': 'المظهر',
+  'Light': 'فاتح',
+  'System': 'النظام',
+  'Dark': 'داكن',
+
+  // Doctor home stats
+  'Patients': 'المرضى',
+  'Protocols': 'البروتوكولات',
+  'Active': 'نشط',
+  'New': '+ جديد',
+  'New Protocol': 'بروتوكول جديد',
+
+  // Patient home stats
+  'Sessions Done': 'جلسات مكتملة',
+  'This Week': 'هذا الأسبوع',
+  'Progress': 'التقدم',
+
+  // Stroke programs
+  'Stroke Rehab': 'تأهيل السكتة',
+  'Post-Stroke Recovery': 'تعافي ما بعد السكتة',
+  'Moderate': 'متوسط',
+  'Gentle': 'لطيف',
+  'stroke_rehab_desc':
+      'مصمم لتحسين حركة اليد عن طريق تحفيز عضلات الثني والبسط.\nيساعد في استعادة وظيفة الأعصاب وتعزيز التنشيط.',
+
+  // Session history
+  'Session History': 'سجل الجلسات',
+  'Overall Progress': 'التقدم الكلي',
+  '78% completion rate this month': 'معدل الإتمام ٧٨٪ هذا الشهر',
+  'Recent Sessions': 'الجلسات الأخيرة',
+  'Missed': 'فائتة',
+
+  // Session details
+  'About this session': 'عن هذه الجلسة',
+  'Session Steps': 'خطوات الجلسة',
+  'Exercises': 'تمارين',
+  'Glove Connection': 'توصيل القفاز',
+  'Ensure your Smart Glove is paired and charged before starting.':
+      'تأكد من إقران القفاز الذكي وشحنه قبل البدء.',
+
+  // Session screen
+  'Resume': 'استكمال',
+  'Pause': 'إيقاف مؤقت',
+
+  // Feedback
+  'Session Complete!': 'اكتملت الجلسة!',
+  'Time taken': 'الوقت المستغرق',
+  'Session Accuracy': 'دقة الجلسة',
+  'How was your pain level?': 'ما مستوى ألمك؟',
+  'How much effort did you put in?': 'ما مقدار الجهد الذي بذلته؟',
+  'Any notes for your doctor...': 'أي ملاحظات لطبيبك...',
+  'View Report': 'عرض التقرير',
+  'Notes': 'ملاحظات',
+
+  // Report
+  'Report sent to your doctor': 'تم إرسال التقرير لطبيبك',
+  'Back to Home': 'العودة للرئيسية',
+
+  // Create program exercises tab
+  'Session Settings': 'إعدادات الجلسة',
+  'Add Exercise': 'إضافة تمرين',
+  'Edit Exercise': 'تعديل تمرين',
+  'Exercise Name': 'اسم التمرين',
+  'Reps': 'تكرارات',
+  'Sets': 'مجموعات',
+  'Rest (s)': 'استراحة (ث)',
+  'no_exercises_yet': 'لا توجد تمارين بعد.',
+  'Stroke Rehabilitation': 'تأهيل السكتة الدماغية',
 };

@@ -1,30 +1,51 @@
 import 'package:flutter/material.dart';
 import 'theme_repository.dart';
 
+enum AppThemeMode { light, system, dark }
+
 class ThemeNotifier extends ChangeNotifier {
   final ThemeRepository _repository;
 
-  bool _isDark = false;
+  AppThemeMode _mode = AppThemeMode.system;
   bool _isLoaded = false;
 
   ThemeNotifier(this._repository) {
     _loadTheme();
   }
 
-  bool get isDark => _isDark;
+  AppThemeMode get appThemeMode => _mode;
   bool get isLoaded => _isLoaded;
 
-  ThemeMode get themeMode => _isDark ? ThemeMode.dark : ThemeMode.light;
+  /// Legacy getter kept for backward compat
+  bool get isDark => _mode == AppThemeMode.dark;
+
+  ThemeMode get themeMode {
+    switch (_mode) {
+      case AppThemeMode.light:
+        return ThemeMode.light;
+      case AppThemeMode.dark:
+        return ThemeMode.dark;
+      case AppThemeMode.system:
+        return ThemeMode.system;
+    }
+  }
 
   Future<void> _loadTheme() async {
-    _isDark = await _repository.getSavedTheme();
+    final isDark = await _repository.getSavedTheme();
+    // Try to load extended mode from prefs
+    _mode = isDark ? AppThemeMode.dark : AppThemeMode.light;
     _isLoaded = true;
     notifyListeners();
   }
 
-  Future<void> toggleTheme(bool value) async {
-    _isDark = value;
-    await _repository.saveTheme(value);
+  Future<void> setAppThemeMode(AppThemeMode mode) async {
+    _mode = mode;
+    await _repository.saveTheme(mode == AppThemeMode.dark);
     notifyListeners();
+  }
+
+  /// Legacy toggle kept for backward compat
+  Future<void> toggleTheme(bool value) async {
+    await setAppThemeMode(value ? AppThemeMode.dark : AppThemeMode.light);
   }
 }

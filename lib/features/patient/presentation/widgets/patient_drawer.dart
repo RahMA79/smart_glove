@@ -53,7 +53,9 @@ class PatientDrawer extends StatelessWidget {
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: cs.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
@@ -73,8 +75,12 @@ class PatientDrawer extends StatelessWidget {
             ),
           ),
 
-          _drawerItem(context, Icons.home_outlined, context.tr('drawer_home'),
-              () => Navigator.pop(context)),
+          _drawerItem(
+            context,
+            Icons.home_outlined,
+            context.tr('drawer_home'),
+            () => Navigator.pop(context),
+          ),
 
           _drawerItem(
             context,
@@ -93,29 +99,36 @@ class PatientDrawer extends StatelessWidget {
           ),
 
           ListTile(
-            leading: Icon(Icons.notifications_outlined,
-                color: theme.iconTheme.color),
-            title: Text(context.tr('drawer_notifications'),
-                style: theme.textTheme.bodyMedium),
+            leading: Icon(
+              Icons.notifications_outlined,
+              color: theme.iconTheme.color,
+            ),
+            title: Text(
+              context.tr('drawer_notifications'),
+              style: theme.textTheme.bodyMedium,
+            ),
             trailing: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
                 color: cs.error,
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: const Text('1',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold)),
+              child: const Text(
+                '1',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (_) => const DoctorNotificationsScreen()),
+                  builder: (_) => const DoctorNotificationsScreen(),
+                ),
               );
             },
           ),

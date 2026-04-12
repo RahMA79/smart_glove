@@ -19,32 +19,30 @@ class PatientBottomNav extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
+        color: theme.cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.35 : 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -6),
+            color: Colors.black.withOpacity(isDark ? 0.30 : 0.07),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
           ),
         ],
       ),
       child: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: onTap,
-        elevation: 5,
-        backgroundColor: theme.scaffoldBackgroundColor,
+        elevation: 0,
+        backgroundColor: theme.cardColor,
         type: BottomNavigationBarType.fixed,
-
         selectedItemColor: cs.primary,
-        unselectedItemColor: cs.onSurface.withOpacity(0.55),
-
-        selectedLabelStyle: theme.textTheme.bodySmall?.copyWith(
+        unselectedItemColor: cs.onSurface.withOpacity(0.45),
+        selectedLabelStyle: theme.textTheme.labelSmall?.copyWith(
           fontWeight: FontWeight.w700,
+          color: cs.primary,
         ),
-        unselectedLabelStyle: theme.textTheme.bodySmall?.copyWith(
+        unselectedLabelStyle: theme.textTheme.labelSmall?.copyWith(
           fontWeight: FontWeight.w500,
         ),
-
         items: [
           BottomNavigationBarItem(
             icon: const Icon(Icons.home_outlined),
@@ -52,14 +50,14 @@ class PatientBottomNav extends StatelessWidget {
             label: context.tr('Home'),
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.timer_outlined),
-            activeIcon: const Icon(Icons.timer_rounded),
+            icon: const Icon(Icons.content_cut_outlined),
+            activeIcon: const Icon(Icons.content_cut_rounded),
             label: context.tr('Sessions'),
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.add),
-            activeIcon: const Icon(Icons.add_rounded),
-            label: context.tr('Request doctor'),
+            icon: const Icon(Icons.person_add_outlined),
+            activeIcon: const Icon(Icons.person_add_rounded),
+            label: context.tr('Doctor'),
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.settings_outlined),

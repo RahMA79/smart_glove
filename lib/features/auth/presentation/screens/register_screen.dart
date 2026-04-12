@@ -143,7 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           content: Text(
             'Account created successfully as ${role == 'doctor' ? 'Doctor' : 'Patient'}!',
           ),
-          backgroundColor: Colors.green.shade600,
+          // success snackbar
         ),
       );
 

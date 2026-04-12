@@ -17,7 +17,7 @@ class PatientReportModel {
     required this.patientLevel,
   });
 
-  String get durationLabel => "${duration.inMinutes}m";
+  String get durationLabel { final m = duration.inMinutes; final s = duration.inSeconds % 60; return s == 0 ? "${m}m 0s" : "${m}m ${s}s"; }
   String get accuracyLabel => "${(sessionAccuracy * 100).round()}%";
   String get progressLabel => "${(progressRate * 100).round()}%";
 }
