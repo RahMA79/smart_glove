@@ -1,110 +1,34 @@
-/*
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:async';
 
 class SensorScreen extends StatefulWidget {
-  @override
-  _SensorScreenState createState() => _SensorScreenState();
-}
-
-
-class _SensorScreenState extends State<SensorScreen> {
-
-  String url = "http://192.168.4.1/data"; // IP ثابت على ESP32 AP
-
-  int ebham = 0;
-  int sababa = 0;
-  int wosta = 0;
-  int bensr = 0;
-  int khansr = 0;
-  int emg = 0;
-  int peak = 0;
+  const SensorScreen({super.key});
 
   @override
-  void initState() {
-    super.initState();
-    Timer.periodic(Duration(milliseconds: 100), (_) {
-      fetchData();
-    });
-  }
-
-  Future<void> fetchData() async {
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          ebham = data['ebham'];
-          sababa = data['sababa'];
-          wosta = data['wosta'];
-          bensr = data['bensr'];
-          khansr = data['khansr'];
-          emg = data['emg'];
-          peak = data['peak'];
-        });
-      }
-    } catch (e) {}
-  }
-
-  Widget buildText(String title, int value) {
-    return Text("$title: $value",
-        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(context.tr('glove_data'))),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            buildText(context.tr('finger_thumb'), ebham),
-            buildText(context.tr('finger_index'), sababa),
-            buildText(context.tr('finger_middle'), wosta),
-            buildText(context.tr('finger_ring'), bensr),
-            buildText(context.tr('finger_pinky'), khansr),
-            SizedBox(height: 20),
-            buildText("EMG Avg", emg),
-            buildText("EMG Peak", peak),
-          ],
-        ),
-      ),
-    );
-  }
-}*/
-/*
-
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:async';
-
-class SensorScreen extends StatefulWidget {
-  @override
-  _SensorScreenState createState() => _SensorScreenState();
+  State<SensorScreen> createState() => _SensorScreenState();
 }
 
 class _SensorScreenState extends State<SensorScreen> {
+  final String dataUrl = "http://192.168.4.1/data";
+  final String servoUrl = "http://192.168.4.1/servo";
 
-  String dataUrl = "http://192.168.4.1/data";
-  String servoUrl = "http://192.168.4.1/servo";
+  Timer? timer;
+  Timer? servoTimer;
 
-  int ebham = 0;
-  int sababa = 0;
-  int wosta = 0;
-  int bensr = 0;
-  int khansr = 0;
+  bool isFetching = false;
+  bool isConnected = false;
 
-  double rms = 0;
-  double mav = 0;
-  double variance = 0;
-  int zeroCross = 0;
-  int peak = 0;
+  // Finger data
+  int ebham = 0, sababa = 0, wosta = 0, bensr = 0, khansr = 0;
 
-  // Servo angles
+  // EMG
+  int rawEMG = 0;
+  double rms = 0, mav = 0, variance = 0;
+  int zeroCross = 0, peak = 0;
+
+  // Servo
   double servoEbham = 90;
   double servoSababa = 90;
   double servoWosta = 90;
@@ -114,287 +38,161 @@ class _SensorScreenState extends State<SensorScreen> {
   @override
   void initState() {
     super.initState();
-    Timer.periodic(Duration(milliseconds: 300), (_) {
+
+    timer = Timer.periodic(const Duration(milliseconds: 300), (_) {
       fetchData();
     });
   }
 
+  @override
+  void dispose() {
+    timer?.cancel();
+    servoTimer?.cancel();
+    super.dispose();
+  }
+
+  // ================= FETCH =================
   Future<void> fetchData() async {
+    if (isFetching) return;
+    isFetching = true;
+
     try {
-      final response = await http.get(Uri.parse(dataUrl));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      final res = await http
+          .get(Uri.parse(dataUrl))
+          .timeout(const Duration(seconds: 2));
+
+      if (res.statusCode == 200) {
+        final d = json.decode(res.body);
+
+        if (!mounted) return;
 
         setState(() {
-          ebham = data['ebham'];
-          sababa = data['sababa'];
-          wosta = data['wosta'];
-          bensr = data['bensr'];
-          khansr = data['khansr'];
+          isConnected = true;
 
-          rms = (data['rms'] ?? 0).toDouble();
-          mav = (data['mav'] ?? 0).toDouble();
-          variance = (data['variance'] ?? 0).toDouble();
-          zeroCross = data['zeroCross'] ?? 0;
-          peak = data['peak'] ?? 0;
+          ebham = d['ebham'] ?? 0;
+          sababa = d['sababa'] ?? 0;
+          wosta = d['wosta'] ?? 0;
+          bensr = d['bensr'] ?? 0;
+          khansr = d['khansr'] ?? 0;
+
+          rawEMG = d['rawEMG'] ?? 0;
+          rms = (d['rms'] ?? 0).toDouble();
+          mav = (d['mav'] ?? 0).toDouble();
+          variance = (d['variance'] ?? 0).toDouble();
+          zeroCross = d['zeroCross'] ?? 0;
+          peak = d['peak'] ?? 0;
         });
       }
-    } catch (e) {}
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => isConnected = false);
+    }
+
+    isFetching = false;
+  }
+
+  // ================= SERVO =================
+  void scheduleServoSend() {
+    servoTimer?.cancel();
+
+    servoTimer = Timer(const Duration(milliseconds: 250), () {
+      sendServoCommand();
+    });
   }
 
   Future<void> sendServoCommand() async {
-    String fullUrl =
+    final url =
         "$servoUrl?ebham=${servoEbham.toInt()}&sababa=${servoSababa.toInt()}&wosta=${servoWosta.toInt()}&bensr=${servoBensr.toInt()}&khansr=${servoKhansr.toInt()}";
 
     try {
-      await http.get(Uri.parse(fullUrl));
-    } catch (e) {}
+      await http.get(Uri.parse(url)).timeout(const Duration(seconds: 2));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => isConnected = false);
+    }
   }
 
-  Widget buildSlider(String title, double value, Function(double) onChanged) {
-    return Column(
-      children: [
-        Text("$title: ${value.toInt()}",
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        Slider(
-          value: value,
-          min: 0,
-          max: 180,
-          divisions: 180,
-          label: value.toInt().toString(),
-          onChanged: (newValue) {
-            setState(() {
-              onChanged(newValue);
-            });
-            sendServoCommand();
-          },
-        ),
-      ],
+  // ================= UI =================
+  Widget card(String title, String value) {
+    return Card(
+      child: ListTile(title: Text(title), trailing: Text(value)),
     );
   }
 
-  Widget buildText(String title, dynamic value) {
-    return Text("$title: $value",
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(context.tr('glove_control_emg'))),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-
-            SizedBox(height: 20),
-
-            // ===== FLEX DATA =====
-            buildText(context.tr('finger_thumb'), ebham),
-            buildText(context.tr('finger_index'), sababa),
-            buildText(context.tr('finger_middle'), wosta),
-            buildText(context.tr('finger_ring'), bensr),
-            buildText(context.tr('finger_pinky'), khansr),
-
-            SizedBox(height: 20),
-
-            // ===== EMG =====
-            buildText("RMS", rms.toStringAsFixed(2)),
-            buildText("MAV", mav.toStringAsFixed(2)),
-            buildText("Variance", variance.toStringAsFixed(2)),
-            buildText("ZeroCross", zeroCross),
-            buildText("Peak", peak),
-
-            SizedBox(height: 30),
-            Divider(),
-
-            Text(context.tr('servo_control'),
-                style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue)),
-
-            // ===== Servo Sliders =====
-            buildSlider(context.tr('finger_thumb_servo'), servoEbham,
-                (v) => servoEbham = v),
-
-            buildSlider(context.tr('finger_index_servo'), servoSababa,
-                (v) => servoSababa = v),
-
-            buildSlider(context.tr('finger_middle_servo'), servoWosta,
-                (v) => servoWosta = v),
-
-            buildSlider(context.tr('finger_ring_servo'), servoBensr,
-                (v) => servoBensr = v),
-
-            buildSlider(context.tr('finger_pinky_servo'), servoKhansr,
-                (v) => servoKhansr = v),
-
-            SizedBox(height: 40),
-          ],
-        ),
+  Widget slider(String title, double value, Function(double) onChanged) {
+    return Card(
+      child: Column(
+        children: [
+          Text("$title: ${value.toInt()}"),
+          Slider(
+            value: value,
+            min: 0,
+            max: 180,
+            divisions: 180,
+            onChanged: (v) {
+              setState(() => onChanged(v));
+              scheduleServoSend();
+            },
+          ),
+        ],
       ),
     );
   }
-}
-*/
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:async';
-import 'package:smart_glove/core/localization/app_localizations.dart';
 
-class SensorScreen extends StatefulWidget {
-  @override
-  _SensorScreenState createState() => _SensorScreenState();
-}
-
-class _SensorScreenState extends State<SensorScreen> {
-  // ================= URL =================
-  String dataUrl = "http://192.168.4.1/data";
-  String servoUrl = "http://192.168.4.1/servo";
-
-  // ================= FLEX DATA =================
-  int ebham = 0;
-  int sababa = 0;
-  int wosta = 0;
-  int bensr = 0;
-  int khansr = 0;
-
-  // ================= EMG DATA =================
-  double rms = 0;
-  double mav = 0;
-  double variance = 0;
-  int zeroCross = 0;
-  int peak = 0;
-
-  // ================= SERVO ANGLES =================
-  double servoEbham = 90;
-  double servoSababa = 90;
-  double servoWosta = 90;
-  double servoBensr = 90;
-  double servoKhansr = 90;
-
-  @override
-  void initState() {
-    super.initState();
-    Timer.periodic(Duration(milliseconds: 300), (_) {
-      fetchData();
-    });
-  }
-
-  // ================= FETCH DATA =================
-  Future<void> fetchData() async {
-    try {
-      final response = await http.get(Uri.parse(dataUrl));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          ebham = data['ebham'];
-          sababa = data['sababa'];
-          wosta = data['wosta'];
-          bensr = data['bensr'];
-          khansr = data['khansr'];
-
-          rms = (data['rms'] ?? 0).toDouble();
-          mav = (data['mav'] ?? 0).toDouble();
-          variance = (data['variance'] ?? 0).toDouble();
-          zeroCross = data['zeroCross'] ?? 0;
-          peak = data['peak'] ?? 0;
-        });
-      }
-    } catch (e) {
-      // print("Error fetching data: $e");
-    }
-  }
-
-  // ================= SEND SERVO COMMAND =================
-  Future<void> sendServoCommand() async {
-    String fullUrl =
-        "$servoUrl?ebham=${servoEbham.toInt()}&sababa=${servoSababa.toInt()}&wosta=${servoWosta.toInt()}&bensr=${servoBensr.toInt()}&khansr=${servoKhansr.toInt()}";
-
-    try {
-      await http.get(Uri.parse(fullUrl));
-      await Future.delayed(Duration(milliseconds: 50)); // حماية للسيرفر
-    } catch (e) {
-      // print("Error sending servo command: $e");
-    }
-  }
-
-  // ================= WIDGETS =================
-  Widget buildSlider(String title, double value, Function(double) onChanged) {
-    return Column(
-      children: [
-        Text("$title: ${value.toInt()}",
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        Slider(
-          value: value,
-          min: 0,
-          max: 180,
-          divisions: 180,
-          label: value.toInt().toString(),
-          onChanged: (newValue) {
-            setState(() {
-              onChanged(newValue);
-            });
-          },
-          onChangeEnd: (newValue) {
-            sendServoCommand(); // يرسل الأمر لما تخلص السحب
-          },
-        ),
-        SizedBox(height: 10),
-      ],
-    );
-  }
-
-  Widget buildText(String title, dynamic value) {
-    return Text("$title: $value",
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
-  }
-
-  // ================= BUILD UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.tr('glove_control_emg'))),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
+      appBar: AppBar(title: const Text("Smart Glove")),
+
+      body: RefreshIndicator(
+        onRefresh: fetchData,
+        child: ListView(
+          padding: const EdgeInsets.all(12),
           children: [
-            SizedBox(height: 10),
-
-            // ===== FLEX DATA =====
-            buildText(context.tr('finger_thumb'), ebham),
-            buildText(context.tr('finger_index'), sababa),
-            buildText(context.tr('finger_middle'), wosta),
-            buildText(context.tr('finger_ring'), bensr),
-            buildText(context.tr('finger_pinky'), khansr),
-            SizedBox(height: 20),
-
-            // ===== EMG DATA =====
-            buildText("RMS", rms.toStringAsFixed(2)),
-            buildText("MAV", mav.toStringAsFixed(2)),
-            buildText("Variance", variance.toStringAsFixed(2)),
-            buildText("ZeroCross", zeroCross),
-            buildText("Peak", peak),
-            SizedBox(height: 30),
-
-            Divider(),
-            SizedBox(height: 10),
-            Text(context.tr('servo_control'),
+            // Connection
+            Container(
+              padding: const EdgeInsets.all(10),
+              color: isConnected ? Colors.green[100] : Colors.red[100],
+              child: Text(
+                isConnected ? "Connected" : "Disconnected",
                 style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue)),
-            SizedBox(height: 10),
+                  color: isConnected ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
 
-            // ===== SERVO SLIDERS =====
-            buildSlider(context.tr('finger_thumb_servo'), servoEbham, (v) => servoEbham = v),
-            buildSlider(context.tr('finger_index_servo'), servoSababa, (v) => servoSababa = v),
-            buildSlider(context.tr('finger_middle_servo'), servoWosta, (v) => servoWosta = v),
-            buildSlider(context.tr('finger_ring_servo'), servoBensr, (v) => servoBensr = v),
-            buildSlider(context.tr('finger_pinky_servo'), servoKhansr, (v) => servoKhansr = v),
+            const SizedBox(height: 10),
 
-            SizedBox(height: 30),
+            // Finger Data
+            const Text("Finger Data", style: TextStyle(fontSize: 20)),
+            card("Thumb", "$ebham°"),
+            card("Index", "$sababa°"),
+            card("Middle", "$wosta°"),
+            card("Ring", "$bensr°"),
+            card("Pinky", "$khansr°"),
+
+            const SizedBox(height: 10),
+
+            // EMG
+            const Text("EMG Data", style: TextStyle(fontSize: 20)),
+            card("Raw", rawEMG.toString()),
+            card("RMS", rms.toStringAsFixed(2)),
+            card("MAV", mav.toStringAsFixed(2)),
+            card("Variance", variance.toStringAsFixed(2)),
+            card("ZeroCross", zeroCross.toString()),
+            card("Peak", peak.toString()),
+
+            const SizedBox(height: 10),
+
+            // Servo
+            const Text("Servo Control", style: TextStyle(fontSize: 20)),
+
+            slider("Thumb", servoEbham, (v) => servoEbham = v),
+            slider("Index", servoSababa, (v) => servoSababa = v),
+            slider("Middle", servoWosta, (v) => servoWosta = v),
+            slider("Ring", servoBensr, (v) => servoBensr = v),
+            slider("Pinky", servoKhansr, (v) => servoKhansr = v),
           ],
         ),
       ),

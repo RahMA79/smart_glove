@@ -5,6 +5,7 @@ import 'package:smart_glove/core/widgets/primary_button.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_glove/core/localization/app_localizations.dart';
 import 'package:smart_glove/core/localization/locale_notifier.dart';
+import 'package:smart_glove/sensor.dart';
 
 import '../widgets/login_function.dart';
 import 'register_screen.dart';
@@ -151,7 +152,15 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
               SizedBox(height: SizeConfig.blockHeight * 2),
-
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => SensorScreen()),
+                  );
+                },
+                child: Text(context.tr('Sensor Screen')),
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
